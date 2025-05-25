@@ -1,0 +1,13 @@
+{
+  "files.associations": {
+    "*.js": "javascriptreact",
+    "*.svelte": "svelte",
+    "chrono": "cpp",
+    "functional": "cpp",
+    "*.tcc": "cpp",
+    "array": "cpp",
+    "string": "cpp",
+    "string_view": "cpp",
+    "span": "cpp"
+  }
+}
