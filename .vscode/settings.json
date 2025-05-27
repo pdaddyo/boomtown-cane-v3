@@ -12,6 +12,9 @@
     "format": "cpp",
     "limits": "cpp",
     "functional": "cpp",
-    "tuple": "cpp"
+    "tuple": "cpp",
+    "*.tcc": "cpp",
+    "fstream": "cpp",
+    "ui.h": "c"
   }
 }
