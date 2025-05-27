@@ -3,15 +3,17 @@
 
 #include <FastLED.h>
 
-#define LED_TYPE HD107HD
-#define LED_DATA_PIN 21
-#define LED_CLOCK_PIN 33
-#define LED_MAX_REFRESH_RATE 500
+#define LED_TYPE APA102HD
+#define LED_DATA_PIN 18
+#define LED_CLOCK_PIN 17
+#define LED_MAX_REFRESH_RATE 200
 #define NUM_LEDS_EACH_SIDE 72
 #define NUM_LEDS (NUM_LEDS_EACH_SIDE * 2)
 
-#define INITIAL_BRIGHTNESS 5
+#define INITIAL_BRIGHTNESS 20
 #define COLOR_ORDER BGR
+
+bool leds_setup_completed = false;
 
 CRGB leds[NUM_LEDS];
 

@@ -25,7 +25,7 @@ void setup_i2c()
 // helper function to scan the i2c bus
 void scan_i2c()
 {
-   Wire.begin(6, 7);
+   Wire.begin(11, 10);
    for (byte addr = 1; addr < 127; addr++)
    {
       Wire.beginTransmission(addr);
