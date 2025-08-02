@@ -25,7 +25,7 @@
     "uiExportFolderPath": "/Users/paulbarrass/git/esp32/cane-v3/src/ui",
     "projectExportFolderPath": "/Users/paulbarrass/git/esp32/cane-v3/src/ui",
     "custom_variable_prefix": "uic",
-    "backup_cnt": 8,
+    "backup_cnt": 9,
     "autosave_cnt": 0,
     "group_color_cnt": 0,
     "lvgl_version": "8.3.11",

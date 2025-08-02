@@ -106,9 +106,6 @@ void pride()
    }
 }
 
-// Fire2012 by Mark Kriegsman, July 2012
-// as part of "Five Elements" shown here: http://youtu.be/knWiGsmgycY
-////
 // This basic one-dimensional 'fire' simulation works roughly as follows:
 // There's a underlying array of 'heat' cells, that model the temperature
 // at each point along the line.  Every cycle through the simulation,
@@ -137,12 +134,12 @@ void pride()
 // COOLING: How much does the air cool as it rises?
 // Less cooling = taller flames.  More cooling = shorter flames.
 // Default 50, suggested range 20-100
-#define COOLING 70
+#define COOLING 80
 
 // SPARKING: What chance (out of 255) is there that a new spark will be lit?
 // Higher chance = more roaring fire.  Lower chance = more flickery fire.
 // Default 120, suggested range 50-200.
-#define SPARKING 80
+#define SPARKING 90
 
 bool gReverseDirection = false;
 void Fire2012()
@@ -190,8 +187,8 @@ void Fire2012()
 typedef void (*SimplePatternList[])();
 
 SimplePatternList gPatterns = {
-    bpm,
     Fire2012,
+    bpm,
     juggle,
     pride,
     // sinelon,
