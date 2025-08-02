@@ -139,11 +139,11 @@ public:
       cfg.y_min = 0;        // タッチスクリーンから得られる最小のY値(生の値)
       cfg.y_max = HEIGHT;   // タッチスクリーンから得られる最大のY値(生の値)
       cfg.pin_int = TP_INT; // INTが接続されているピン番号
-      // cfg.pin_rst = TP_RST;
-      cfg.bus_shared = false;  // 画面と共通のバスを使用している場合 trueを設定
+      cfg.pin_rst = TP_RST;
+      cfg.bus_shared = true;   // 画面と共通のバスを使用している場合 trueを設定
       cfg.offset_rotation = 0; // 表示とタッチの向きのが一致しない場合の調整 0~7の値で設定
-      cfg.i2c_port = 0;        // 使用するI2Cを選択 (0 or 1)
-      cfg.i2c_addr = 0x15;     // I2Cデバイスアドレス番号
+      cfg.i2c_port = 1;        // 使用するI2Cを選択 (0 or 1)
+      cfg.i2c_addr = 0x1a;     // I2Cデバイスアドレス番号
       cfg.pin_sda = I2C_SDA;   // SDAが接続されているピン番号
       cfg.pin_scl = I2C_SCL;   // SCLが接続されているピン番号
       cfg.freq = 400000;       // I2Cクロックを設定
@@ -452,14 +452,13 @@ void leds_loop()
 #ifndef USE_SDL
   EVERY_N_MILLISECONDS(100)
   {
-    // read_gyro();
-    update_gyro();
-    float z = get_gyro_z();
+    // update_gyro();
+    // float z = get_gyro_z();
 
-    if (fabs(z) > 200)
-    {
-      Serial.printf("Gyro:  z:%f\n", z);
-    }
+    // if (fabs(z) > 200)
+    // {
+    //   Serial.printf("Gyro:  z:%f\n", z);
+    // }
   }
 #endif
 

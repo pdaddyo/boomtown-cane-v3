@@ -2,32 +2,36 @@
 
 #define UI_VERSION "4.1.0"
 
-#ifdef ESPS3_1_69
+#ifdef ESPS3_2_80
 
 // screen configs
 #define WIDTH 240
-#define HEIGHT 280
+#define HEIGHT 320
 #define OFFSET_X 0
-#define OFFSET_Y 20
+#define OFFSET_Y 0
 #define RGB_ORDER true
 
 // touch
-#define I2C_SDA 11
-#define I2C_SCL 10
-#define TP_INT 14
-#define TP_RST 13
+#define I2C_SDA 1
+#define I2C_SCL 3
+#define TP_INT 4
+#define TP_RST 2
+// #define I2C_SDA 11
+// #define I2C_SCL 10
+// #define TP_INT 14
+// #define TP_RST 13
 
 // display
-#define SPI SPI2_HOST
+#define SPI SPI3_HOST
 
-#define SCLK 6
-#define MOSI 7
+#define SCLK 40
+#define MOSI 45
 #define MISO -1
-#define DC 4
-#define CS 5
-#define RST 8
+#define DC 41
+#define CS 42
+#define RST 39
 
-#define BL 15
+#define BL 5
 
 #define BUZZER 33
 
@@ -39,7 +43,7 @@
 
 // screen configs
 #define WIDTH 240
-#define HEIGHT 240
+#define HEIGHT 320
 #define OFFSET_X 0
 #define OFFSET_Y 0
 #define RGB_ORDER false
