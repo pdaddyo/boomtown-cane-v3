@@ -24,7 +24,7 @@
                       {
                         "nid": 10,
                         "strtype": "OBJECT/Name",
-                        "strval": "Label2",
+                        "strval": "LabelCurrentPattern",
                         "InheritedType": 10
                       },
                       {
@@ -66,7 +66,7 @@
                         "strtype": "OBJECT/Size",
                         "intarray": [
                           100,
-                          55
+                          20
                         ],
                         "InheritedType": 7
                       },
@@ -164,7 +164,7 @@
                               {
                                 "nid": 10450,
                                 "strtype": "_style/Text_Font",
-                                "strval": "montserrat_44",
+                                "strval": "montserrat_14",
                                 "InheritedType": 3
                               }
                             ],
@@ -294,6 +294,7 @@
                           },
                           {
                             "nid": 1010,
+                            "flags": 1048576,
                             "strtype": "LABEL/Label",
                             "InheritedType": 1
                           },

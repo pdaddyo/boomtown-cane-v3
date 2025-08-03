@@ -1,3 +1,5 @@
+#include "ui/ui.h"
+
 uint8_t gCurrentPatternNumber = 0; // Index number of which pattern is current
 uint8_t gHue = 0;                  // rotating "base color" used by many of the patterns
 
@@ -194,8 +196,22 @@ SimplePatternList gPatterns = {
     // sinelon,
 };
 
+// pattern names
+const char *gPatternNames[] = {
+    "Fire",
+    "bpm",
+    "juggle",
+    "pride",
+};
+
+void setCurrentPatternLabel()
+{
+   lv_label_set_text(ui_LabelCurrentPattern, gPatternNames[gCurrentPatternNumber]);
+}
+
 void nextPattern()
 {
    // add one to the current pattern number, and wrap around at the end
    gCurrentPatternNumber = (gCurrentPatternNumber + 1) % ARRAY_SIZE(gPatterns);
+   setCurrentPatternLabel();
 }

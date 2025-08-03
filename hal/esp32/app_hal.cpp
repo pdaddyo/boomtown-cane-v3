@@ -289,7 +289,7 @@ void loadSplash()
     }
   }
 
-  delay(500);
+  delay(300);
 }
 
 void hal_setup()
@@ -429,16 +429,11 @@ void leds_setup()
   // Serial.println("Initializing gyroscope");
   // setup_gyro();
   leds_setup_completed = true;
+  setCurrentPatternLabel();
 }
 
 void leds_loop()
 {
-  if (leds_setup_completed == false)
-  {
-    sinelon();
-    FastLED.show();
-    return;
-  }
 
   // Call the current pattern function once, updating the 'leds' array
   gPatterns[gCurrentPatternNumber]();

@@ -8,7 +8,7 @@
 lv_obj_t *ui_Screen1;
 lv_obj_t *ui_TabView1;
 lv_obj_t *ui_TabStatus;
-lv_obj_t *ui_Label2;
+lv_obj_t *ui_LabelCurrentPattern;
 lv_obj_t *ui_ButtonNextPattern;
 lv_obj_t *ui_Label3;
 lv_obj_t *ui_TabSettings;
@@ -50,13 +50,13 @@ ui_TabStatus = lv_tabview_add_tab(ui_TabView1, "Status");
 lv_obj_set_flex_flow(ui_TabStatus,LV_FLEX_FLOW_ROW);
 lv_obj_set_flex_align(ui_TabStatus, LV_FLEX_ALIGN_START, LV_FLEX_ALIGN_START, LV_FLEX_ALIGN_START);
 
-ui_Label2 = lv_label_create(ui_TabStatus);
-lv_obj_set_height( ui_Label2, 55);
-lv_obj_set_width( ui_Label2, lv_pct(100));
-lv_obj_set_align( ui_Label2, LV_ALIGN_CENTER );
-lv_label_set_text(ui_Label2,"CaneOS\n");
-lv_obj_set_style_text_align(ui_Label2, LV_TEXT_ALIGN_CENTER, LV_PART_MAIN| LV_STATE_DEFAULT);
-lv_obj_set_style_text_font(ui_Label2, &lv_font_montserrat_44, LV_PART_MAIN| LV_STATE_DEFAULT);
+ui_LabelCurrentPattern = lv_label_create(ui_TabStatus);
+lv_obj_set_height( ui_LabelCurrentPattern, 20);
+lv_obj_set_width( ui_LabelCurrentPattern, lv_pct(100));
+lv_obj_set_align( ui_LabelCurrentPattern, LV_ALIGN_CENTER );
+lv_label_set_text(ui_LabelCurrentPattern,"CaneOS\n");
+lv_obj_set_style_text_align(ui_LabelCurrentPattern, LV_TEXT_ALIGN_CENTER, LV_PART_MAIN| LV_STATE_DEFAULT);
+lv_obj_set_style_text_font(ui_LabelCurrentPattern, &lv_font_montserrat_14, LV_PART_MAIN| LV_STATE_DEFAULT);
 
 ui_ButtonNextPattern = lv_btn_create(ui_TabStatus);
 lv_obj_set_height( ui_ButtonNextPattern, 50);
@@ -121,7 +121,7 @@ void ui_Screen1_screen_destroy(void)
 ui_Screen1= NULL;
 ui_TabView1= NULL;
 ui_TabStatus= NULL;
-ui_Label2= NULL;
+ui_LabelCurrentPattern= NULL;
 ui_ButtonNextPattern= NULL;
 ui_Label3= NULL;
 ui_TabSettings= NULL;
