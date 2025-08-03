@@ -15,6 +15,7 @@
     "tuple": "cpp",
     "*.tcc": "cpp",
     "fstream": "cpp",
-    "ui.h": "c"
+    "ui.h": "c",
+    "lv_fs.h": "c"
   }
 }

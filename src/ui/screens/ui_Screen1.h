@@ -20,6 +20,7 @@ extern lv_obj_t *ui_LabelCurrentPattern;
 extern void ui_event_ButtonNextPattern( lv_event_t * e);
 extern lv_obj_t *ui_ButtonNextPattern;
 extern lv_obj_t *ui_Label3;
+extern lv_obj_t *ui_ImagePreview;
 extern lv_obj_t *ui_TabSettings;
 extern lv_obj_t *ui_Label1;
 extern void ui_event_SliderLEDBrightness( lv_event_t * e);

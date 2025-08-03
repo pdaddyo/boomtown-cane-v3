@@ -45,6 +45,7 @@
 
 #include "main.h"
 #include "splash.h"
+#include "images.h"
 
 #include "FS.h"
 #include "FFat.h"
@@ -58,6 +59,26 @@
 #define FLASH FFat
 #define F_NAME "FATFS"
 #define buf_size 10
+
+lv_disp_t *display_virtual_leds;
+
+// virtual leds display
+#define DISPLAY_VIRTUAL_LEDS_WIDTH 200
+#define DISPLAY_VIRTUAL_LEDS_HEIGHT 72
+#define DISPLAY_VIRTUAL_LEDS_BYTE_PER_PIXEL 2 /* be 2 for RGB565 */
+
+static lv_color_t virtual_leds_buf[DISPLAY_VIRTUAL_LEDS_WIDTH * DISPLAY_VIRTUAL_LEDS_HEIGHT];
+static lv_disp_draw_buf_t virtual_leds_draw_buf;
+static lv_disp_drv_t virtual_leds_drv;
+static lv_obj_t *virtual_leds_ui_screen;
+
+// lcd display
+lv_disp_t *display_lcd;
+static const uint32_t screenWidth = WIDTH;
+static const uint32_t screenHeight = HEIGHT;
+
+static lv_disp_draw_buf_t draw_buf;
+static lv_color_t buf[2][screenWidth * buf_size];
 
 class LGFX : public lgfx::LGFX_Device
 {
@@ -176,12 +197,6 @@ qmi8658_result_t qmi8658_result;
 qmi_data_t data; // Declare a variable to store sensor data
 #endif
 
-static const uint32_t screenWidth = WIDTH;
-static const uint32_t screenHeight = HEIGHT;
-
-static lv_disp_draw_buf_t draw_buf;
-static lv_color_t buf[2][screenWidth * buf_size];
-
 static bool transfer = false;
 
 void hal_setup(void);
@@ -201,7 +216,7 @@ String hexString(uint8_t *arr, size_t len, bool caps = false, String separator =
 bool lvImgHeader(uint8_t *byteArray, uint8_t cf, uint16_t w, uint16_t h);
 
 /* Display flushing */
-void my_disp_flush(lv_disp_drv_t *disp, const lv_area_t *area, lv_color_t *color_p)
+void lcd_disp_flush(lv_disp_drv_t *disp, const lv_area_t *area, lv_color_t *color_p)
 {
   if (tft.getStartCount() == 0)
   {
@@ -209,6 +224,11 @@ void my_disp_flush(lv_disp_drv_t *disp, const lv_area_t *area, lv_color_t *color
   }
 
   tft.pushImageDMA(area->x1, area->y1, area->x2 - area->x1 + 1, area->y2 - area->y1 + 1, (lgfx::swap565_t *)&color_p->full);
+  lv_disp_flush_ready(disp); /* tell lvgl that flushing is done */
+}
+
+void virtual_leds_disp_flush(lv_disp_drv_t *disp, const lv_area_t *area, lv_color_t *color_p)
+{
   lv_disp_flush_ready(disp); /* tell lvgl that flushing is done */
 }
 
@@ -292,6 +312,40 @@ void loadSplash()
   delay(300);
 }
 
+void setup_virtual_leds_display()
+{
+
+  lv_disp_draw_buf_init(&virtual_leds_draw_buf, virtual_leds_buf, NULL, DISPLAY_VIRTUAL_LEDS_WIDTH * DISPLAY_VIRTUAL_LEDS_HEIGHT);
+
+  lv_disp_drv_init(&virtual_leds_drv);
+  virtual_leds_drv.hor_res = DISPLAY_VIRTUAL_LEDS_WIDTH;
+  virtual_leds_drv.ver_res = DISPLAY_VIRTUAL_LEDS_HEIGHT;
+  virtual_leds_drv.flush_cb = virtual_leds_disp_flush;
+  virtual_leds_drv.draw_buf = &virtual_leds_draw_buf;
+  virtual_leds_drv.full_refresh = true;
+  display_virtual_leds = lv_disp_drv_register(&virtual_leds_drv);
+}
+
+void setup_virtual_leds_ui_screen()
+{
+  virtual_leds_ui_screen = lv_obj_create(NULL);
+  lv_obj_set_size(virtual_leds_ui_screen, DISPLAY_VIRTUAL_LEDS_WIDTH, DISPLAY_VIRTUAL_LEDS_HEIGHT);
+  lv_obj_set_pos(virtual_leds_ui_screen, 0, 0);
+  lv_obj_set_style_bg_color(virtual_leds_ui_screen, lv_color_hex(0x000000), LV_PART_MAIN);
+
+  // add an image to the screen
+  lv_obj_t *image = lv_img_create(virtual_leds_ui_screen);
+  lv_img_set_src(image, &boomtown_bw_72_square);
+  lv_obj_set_size(image, DISPLAY_VIRTUAL_LEDS_WIDTH, DISPLAY_VIRTUAL_LEDS_HEIGHT);
+  lv_obj_set_pos(image, 0, 0);
+  lv_obj_set_style_bg_color(image, lv_color_hex(0x000000), LV_PART_MAIN);
+  lv_obj_set_style_bg_opa(image, LV_OPA_COVER, LV_PART_MAIN);
+
+  lv_disp_set_default(display_virtual_leds);
+  lv_scr_load(virtual_leds_ui_screen);
+  lv_disp_set_default(display_lcd);
+}
+
 void hal_setup()
 {
 
@@ -313,6 +367,10 @@ void hal_setup()
 
   lv_init();
 
+  Timber.i("Setup virtual leds display");
+  setup_virtual_leds_display();
+
+  Timber.i("Setup lcd display");
   lv_disp_draw_buf_init(&draw_buf, buf[0], buf[1], screenWidth * buf_size);
 
   /*Initialize the display*/
@@ -321,14 +379,16 @@ void hal_setup()
   /*Change the following line to your display resolution*/
   disp_drv.hor_res = screenWidth;
   disp_drv.ver_res = screenHeight;
-  disp_drv.flush_cb = my_disp_flush;
+  disp_drv.flush_cb = lcd_disp_flush;
   disp_drv.draw_buf = &draw_buf;
-  lv_disp_drv_register(&disp_drv);
+  display_lcd = lv_disp_drv_register(&disp_drv);
+  lv_disp_set_default(display_lcd);
 
   /*Initialize the (dummy) input device driver*/
   static lv_indev_drv_t indev_drv;
   lv_indev_drv_init(&indev_drv);
   indev_drv.type = LV_INDEV_TYPE_POINTER;
+  indev_drv.disp = display_lcd;
   indev_drv.read_cb = my_touchpad_read;
   lv_indev_drv_register(&indev_drv);
 
@@ -337,10 +397,23 @@ void hal_setup()
   _lv_fs_init();
 
   ui_init();
+  setup_virtual_leds_ui_screen();
 
   Serial.println(heapUsage());
 
-  String custom = prefs.getString("custom", "");
+  // bool fsState = setupFS();
+  // if (fsState)
+  // {
+  //   // driveList_cb(NULL);
+  //   Serial.println("Setup FS success");
+  // }
+  // else
+  // {
+  //   Serial.println("Setup FS failed");
+  //   // showError(F_NAME, "Failed to mount the partition");
+  // }
+
+  // String custom = prefs.getString("custom", "");
 
   lv_disp_load_scr(ui_Screen1);
 
@@ -358,6 +431,8 @@ void hal_setup()
   // showError("IMU State", qmi8658c.resultToString(qmi8658_result));
 
 #endif
+
+  lv_img_set_src(ui_ImagePreview, &boomtown_bw_72_square);
 
   Timber.i("Setup done");
 }
@@ -423,11 +498,7 @@ void leds_setup()
   delay(1000);
   Serial.println("Initializing LEDs");
   setup_leds();
-  Serial.println("Initializing I2C bus");
-  // setup_i2c();
-  // scan_i2c();[]
-  // Serial.println("Initializing gyroscope");
-  // setup_gyro();
+
   leds_setup_completed = true;
   setCurrentPatternLabel();
 }

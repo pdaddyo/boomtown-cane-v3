@@ -11,6 +11,7 @@ lv_obj_t *ui_TabStatus;
 lv_obj_t *ui_LabelCurrentPattern;
 lv_obj_t *ui_ButtonNextPattern;
 lv_obj_t *ui_Label3;
+lv_obj_t *ui_ImagePreview;
 lv_obj_t *ui_TabSettings;
 lv_obj_t *ui_Label1;
 lv_obj_t *ui_SliderLEDBrightness;
@@ -47,8 +48,8 @@ lv_obj_set_align( ui_TabView1, LV_ALIGN_CENTER );
 lv_obj_clear_flag( ui_TabView1, LV_OBJ_FLAG_SCROLLABLE );    /// Flags
 
 ui_TabStatus = lv_tabview_add_tab(ui_TabView1, "Status");
-lv_obj_set_flex_flow(ui_TabStatus,LV_FLEX_FLOW_ROW);
-lv_obj_set_flex_align(ui_TabStatus, LV_FLEX_ALIGN_START, LV_FLEX_ALIGN_START, LV_FLEX_ALIGN_START);
+lv_obj_set_flex_flow(ui_TabStatus,LV_FLEX_FLOW_ROW_WRAP);
+lv_obj_set_flex_align(ui_TabStatus, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_START, LV_FLEX_ALIGN_START);
 
 ui_LabelCurrentPattern = lv_label_create(ui_TabStatus);
 lv_obj_set_height( ui_LabelCurrentPattern, 20);
@@ -72,6 +73,13 @@ lv_obj_set_width( ui_Label3, LV_SIZE_CONTENT);  /// 1
 lv_obj_set_height( ui_Label3, LV_SIZE_CONTENT);   /// 1
 lv_obj_set_align( ui_Label3, LV_ALIGN_CENTER );
 lv_label_set_text(ui_Label3,"Next Pattern");
+
+ui_ImagePreview = lv_img_create(ui_TabStatus);
+lv_obj_set_width( ui_ImagePreview, LV_SIZE_CONTENT);  /// 100
+lv_obj_set_height( ui_ImagePreview, LV_SIZE_CONTENT);   /// 1
+lv_obj_set_align( ui_ImagePreview, LV_ALIGN_CENTER );
+lv_obj_add_flag( ui_ImagePreview, LV_OBJ_FLAG_ADV_HITTEST );   /// Flags
+lv_obj_clear_flag( ui_ImagePreview, LV_OBJ_FLAG_SCROLLABLE );    /// Flags
 
 ui_TabSettings = lv_tabview_add_tab(ui_TabView1, "Settings");
 
@@ -124,6 +132,7 @@ ui_TabStatus= NULL;
 ui_LabelCurrentPattern= NULL;
 ui_ButtonNextPattern= NULL;
 ui_Label3= NULL;
+ui_ImagePreview= NULL;
 ui_TabSettings= NULL;
 ui_Label1= NULL;
 ui_SliderLEDBrightness= NULL;
