@@ -3,25 +3,25 @@
 
 #if SDL_VER_RES == 240
 
-#define ENABLE_FACE_34_2_DIAL // (Shadow) 
-#define ENABLE_FACE_75_2_DIAL // (Analog)
-#define ENABLE_FACE_79_2_DIAL // (Blue)
-#define ENABLE_FACE_116_2_DIAL // (Outline)
-#define ENABLE_FACE_756_2_DIAL // (Red)
-#define ENABLE_FACE_B_W_RESIZED // (B & W)
-#define ENABLE_FACE_KENYA // (Kenya)
+#define ENABLE_FACE_34_2_DIAL     // (Shadow)
+#define ENABLE_FACE_75_2_DIAL     // (Analog)
+#define ENABLE_FACE_79_2_DIAL     // (Blue)
+#define ENABLE_FACE_116_2_DIAL    // (Outline)
+#define ENABLE_FACE_756_2_DIAL    // (Red)
+#define ENABLE_FACE_B_W_RESIZED   // (B & W)
+#define ENABLE_FACE_KENYA         // (Kenya)
 #define ENABLE_FACE_PIXEL_RESIZED // (Pixel)
-#define ENABLE_FACE_RADAR // (Radar)
+#define ENABLE_FACE_RADAR         // (Radar)
 #define ENABLE_FACE_SMART_RESIZED // (Smart)
-#define ENABLE_FACE_TIX_RESIZED // (Tix)
-#define ENABLE_FACE_WFB_RESIZED // (WFB)
+#define ENABLE_FACE_TIX_RESIZED   // (Tix)
+#define ENABLE_FACE_WFB_RESIZED   // (WFB)
 
 #endif
 
 #if SDL_VER_RES == 280
 
-#define ENABLE_FACE_174 // (174)
-#define ENABLE_FACE_228 // (228)
+#define ENABLE_FACE_174  // (174)
+#define ENABLE_FACE_228  // (228)
 #define ENABLE_FACE_1041 // (1041)
 #define ENABLE_FACE_1167 // (1167)
 #define ENABLE_FACE_1169 // (1169)
@@ -31,17 +31,15 @@
 
 #endif
 
-#define ENABLE_GAME_RACING
 #define ENABLE_APP_QMI8658C
 
 #ifdef __cplusplus
-extern "C" {
+extern "C"
+{
 #endif
 
-
-void hal_setup(void);
-void hal_loop(void);
-
+   void hal_setup(void);
+   void hal_loop(void);
 
 #ifdef __cplusplus
 } /* extern "C" */

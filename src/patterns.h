@@ -3,6 +3,9 @@
 uint8_t gCurrentPatternNumber = 0; // Index number of which pattern is current
 uint8_t gHue = 0;                  // rotating "base color" used by many of the patterns
 
+uint8_t fire_sparking = 90;
+uint8_t fire_cooling = 80;
+
 #define ARRAY_SIZE(A) (sizeof(A) / sizeof((A)[0]))
 
 void rainbow()
@@ -66,7 +69,7 @@ void juggle()
    }
 }
 
-void pride()
+void rainbowSlide()
 {
    static uint16_t sPseudotime = 0;
    static uint16_t sLastMillis = 0;
@@ -136,12 +139,12 @@ void pride()
 // COOLING: How much does the air cool as it rises?
 // Less cooling = taller flames.  More cooling = shorter flames.
 // Default 50, suggested range 20-100
-#define COOLING 80
+#define COOLING fire_cooling
 
 // SPARKING: What chance (out of 255) is there that a new spark will be lit?
 // Higher chance = more roaring fire.  Lower chance = more flickery fire.
 // Default 120, suggested range 50-200.
-#define SPARKING 90
+#define SPARKING fire_sparking
 
 bool gReverseDirection = false;
 void Fire2012()
@@ -185,6 +188,73 @@ void Fire2012()
    }
 }
 
+void transgenderFlag()
+{
+   // Transgender flag colors: light blue, pink, white, pink, light blue
+   // with animated wobble effect
+   static uint16_t sOffset = 0;
+
+   // Configurable parameters
+   const uint8_t wobbleAmplitude = 5; // How many LEDs to wobble up/down
+   const uint8_t wobbleSpeed = 10;    // Speed of wobble (lower = faster)
+
+   // Define the flag colors
+   CRGB lightBlue = CRGB(91, 206, 250); // Light blue
+   CRGB pink = CRGB(255, 105, 180);     // More vibrant pink (hot pink)
+   CRGB white = CRGB(255, 255, 255);    // White
+
+   // Calculate stripe width based on total LEDs (5 stripes)
+   uint16_t stripeWidth = NUM_LEDS_EACH_SIDE / 5;
+
+   // Calculate wobble offset - simple up/down motion for entire flag
+   int8_t wobbleOffset = (sin8(sOffset) - 128) * wobbleAmplitude / 128;
+
+   for (uint16_t i = 0; i < NUM_LEDS_EACH_SIDE; i++)
+   {
+      // Apply wobble offset to position lookup
+      int16_t sourcePosition = i - wobbleOffset;
+
+      // Wrap around for smooth animation
+      if (sourcePosition < 0)
+         sourcePosition += NUM_LEDS_EACH_SIDE;
+      if (sourcePosition >= NUM_LEDS_EACH_SIDE)
+         sourcePosition -= NUM_LEDS_EACH_SIDE;
+
+      // Determine which stripe this position belongs to
+      uint16_t stripeIndex = sourcePosition / stripeWidth;
+      if (stripeIndex > 4)
+         stripeIndex = 4;
+
+      CRGB color;
+      switch (stripeIndex)
+      {
+      case 0:
+         color = lightBlue;
+         break;
+      case 1:
+         color = pink;
+         break;
+      case 2:
+         color = white;
+         break;
+      case 3:
+         color = pink;
+         break;
+      case 4:
+      default:
+         color = lightBlue;
+         break;
+      }
+
+      leds[i] = color;
+   }
+
+   addGlitter(200);
+
+   // Animate the wobble
+   EVERY_N_MILLISECONDS(wobbleSpeed) { sOffset += 4; }
+}
+
 // List of patterns to cycle through.  Each is defined as a separate function below.
 typedef void (*SimplePatternList[])();
 
@@ -192,26 +262,39 @@ SimplePatternList gPatterns = {
     Fire2012,
     bpm,
     juggle,
-    pride,
-    // sinelon,
-};
+    rainbow,
+    rainbowSlide,
+    rainbowWithGlitter,
+    sinelon,
+    confetti,
+    transgenderFlag};
 
 // pattern names
 const char *gPatternNames[] = {
     "Fire",
-    "bpm",
-    "juggle",
-    "pride",
+    "BPM",
+    "Juggle",
+    "Rainbow",
+    "Rainbow Slide",
+    "Rainbow Glitter",
+    "Sinelon",
+    "Confetti",
+    "Trans Flag",
 };
 
 void setCurrentPatternLabel()
 {
-   lv_label_set_text(ui_LabelCurrentPattern, gPatternNames[gCurrentPatternNumber]);
+   // lv_label_set_text(ui_LabelCurrentPattern, gPatternNames[gCurrentPatternNumber]);
+}
+
+void setPatternIndex(uint8_t index)
+{
+   gCurrentPatternNumber = index;
+   setCurrentPatternLabel();
 }
 
 void nextPattern()
 {
    // add one to the current pattern number, and wrap around at the end
-   gCurrentPatternNumber = (gCurrentPatternNumber + 1) % ARRAY_SIZE(gPatterns);
-   setCurrentPatternLabel();
+   setPatternIndex((gCurrentPatternNumber + 1) % ARRAY_SIZE(gPatterns));
 }

@@ -14,17 +14,26 @@ extern "C" {
 extern void ui_Screen1_screen_init(void);
 extern void ui_Screen1_screen_destroy(void);
 extern lv_obj_t *ui_Screen1;
-extern lv_obj_t *ui_TabView1;
-extern lv_obj_t *ui_TabStatus;
-extern lv_obj_t *ui_LabelCurrentPattern;
-extern void ui_event_ButtonNextPattern( lv_event_t * e);
-extern lv_obj_t *ui_ButtonNextPattern;
-extern lv_obj_t *ui_Label3;
-extern lv_obj_t *ui_ImagePreview;
-extern lv_obj_t *ui_TabSettings;
+extern lv_obj_t *ui_Container;
+extern void ui_event_DropdownMode( lv_event_t * e);
+extern lv_obj_t *ui_DropdownMode;
 extern lv_obj_t *ui_Label1;
 extern void ui_event_SliderLEDBrightness( lv_event_t * e);
 extern lv_obj_t *ui_SliderLEDBrightness;
+extern lv_obj_t *ui_Label6;
+extern void ui_event_ButtonNextPattern( lv_event_t * e);
+extern lv_obj_t *ui_ButtonNextPattern;
+extern lv_obj_t *ui_Label2;
+extern lv_obj_t *ui_Label7;
+extern void ui_event_ButtonNextPattern1( lv_event_t * e);
+extern lv_obj_t *ui_ButtonNextPattern1;
+extern lv_obj_t *ui_Label3;
+extern void ui_event_ButtonNextPattern2( lv_event_t * e);
+extern lv_obj_t *ui_ButtonNextPattern2;
+extern lv_obj_t *ui_Label4;
+extern void ui_event_ButtonNextPattern3( lv_event_t * e);
+extern lv_obj_t *ui_ButtonNextPattern3;
+extern lv_obj_t *ui_Label5;
 // CUSTOM VARIABLES
 
 #ifdef __cplusplus

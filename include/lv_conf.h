@@ -49,7 +49,7 @@ typedef FF_DIR DIR;
  *=========================*/
 
 /*1: use custom malloc/free, 0: use the built-in `lv_mem_alloc()` and `lv_mem_free()`*/
-// #define LV_MEM_CUSTOM 0
+#define LV_MEM_CUSTOM 0
 #if LV_MEM_CUSTOM == 0
     /*Size of the memory available for `lv_mem_alloc()` in bytes (>= 2kB)*/
     //#define LV_MEM_SIZE (192U*1024U)          /*[bytes]*/
@@ -221,7 +221,7 @@ typedef FF_DIR DIR;
  * Logging
  *-----------*/
 
-/*Enable the log module*/
+/*Enable the log module*/ 
 #define LV_USE_LOG 1
 #if LV_USE_LOG
 
@@ -232,7 +232,7 @@ typedef FF_DIR DIR;
     *LV_LOG_LEVEL_ERROR       Only critical issue, when the system may fail
     *LV_LOG_LEVEL_USER        Only logs added by the user
     *LV_LOG_LEVEL_NONE        Do not log anything*/
-    #define LV_LOG_LEVEL LV_LOG_LEVEL_INFO
+    #define LV_LOG_LEVEL LV_LOG_LEVEL_WARN 
 
     /*1: Print the log with 'printf';
     *0: User need to register a callback with `lv_log_register_print_cb()`*/
@@ -271,16 +271,16 @@ typedef FF_DIR DIR;
  *-----------*/
 
 /*1: Show CPU usage and FPS count*/
-#define LV_USE_PERF_MONITOR 1
+#define LV_USE_PERF_MONITOR 0
 #if LV_USE_PERF_MONITOR
-    #define LV_USE_PERF_MONITOR_POS LV_ALIGN_BOTTOM_MID
+    #define LV_USE_PERF_MONITOR_POS LV_ALIGN_BOTTOM_RIGHT
 #endif
 
 /*1: Show the used memory and the memory fragmentation)sqa
  * Requires LV_MEM_CUSTOM = 0*/
-#define LV_USE_MEM_MONITOR 1
+#define LV_USE_MEM_MONITOR 0
 #if LV_USE_MEM_MONITOR
-    #define LV_USE_MEM_MONITOR_POS LV_ALIGN_OUT_BOTTOM_MID
+    #define LV_USE_MEM_MONITOR_POS LV_ALIGN_OUT_BOTTOM_LEFT
 #endif
 
 /*1: Draw random colored rectangles over the redrawn areas*/

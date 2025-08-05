@@ -10,8 +10,9 @@
 extern "C" {
 #endif
 
-void onButtonNextPatternClicked(lv_event_t * e);
+void onDropdownPatternChanged(lv_event_t * e);
 void onLEDBrightnessChanged(lv_event_t * e);
+void onButtonNextPatternClicked(lv_event_t * e);
 
 #ifdef __cplusplus
 } /*extern "C"*/

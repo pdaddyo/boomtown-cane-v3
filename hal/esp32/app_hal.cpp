@@ -65,9 +65,10 @@ lv_disp_t *display_virtual_leds;
 // virtual leds display
 #define DISPLAY_VIRTUAL_LEDS_WIDTH 200
 #define DISPLAY_VIRTUAL_LEDS_HEIGHT 72
+#define DISPLAY_VIRTUAL_LEDS_PIXEL_COUNT (DISPLAY_VIRTUAL_LEDS_WIDTH * DISPLAY_VIRTUAL_LEDS_HEIGHT)
 #define DISPLAY_VIRTUAL_LEDS_BYTE_PER_PIXEL 2 /* be 2 for RGB565 */
 
-static lv_color_t virtual_leds_buf[DISPLAY_VIRTUAL_LEDS_WIDTH * DISPLAY_VIRTUAL_LEDS_HEIGHT];
+static lv_color_t virtual_leds_buf[DISPLAY_VIRTUAL_LEDS_PIXEL_COUNT];
 static lv_disp_draw_buf_t virtual_leds_draw_buf;
 static lv_disp_drv_t virtual_leds_drv;
 static lv_obj_t *virtual_leds_ui_screen;
@@ -79,6 +80,11 @@ static const uint32_t screenHeight = HEIGHT;
 
 static lv_disp_draw_buf_t draw_buf;
 static lv_color_t buf[2][screenWidth * buf_size];
+
+#define SCREEN_TOUCH_TIMEOUT 5000
+#define SCREEN_TOUCH_TIMEOUT_FADE_MS 420
+static uint8_t lcd_brightness = 100;
+static unsigned long time_of_last_touch = 0;
 
 class LGFX : public lgfx::LGFX_Device
 {
@@ -197,8 +203,6 @@ qmi8658_result_t qmi8658_result;
 qmi_data_t data; // Declare a variable to store sensor data
 #endif
 
-static bool transfer = false;
-
 void hal_setup(void);
 void hal_loop(void);
 void update_gyro();
@@ -210,8 +214,6 @@ void flashDrive_cb(lv_event_t *e);
 void driveList_cb(lv_event_t *e);
 
 void checkLocal();
-
-String hexString(uint8_t *arr, size_t len, bool caps = false, String separator = "");
 
 bool lvImgHeader(uint8_t *byteArray, uint8_t cf, uint16_t w, uint16_t h);
 
@@ -229,6 +231,25 @@ void lcd_disp_flush(lv_disp_drv_t *disp, const lv_area_t *area, lv_color_t *colo
 
 void virtual_leds_disp_flush(lv_disp_drv_t *disp, const lv_area_t *area, lv_color_t *color_p)
 {
+  Timber.i("led display flush start %d,%d -> %d,%d", area->x1, area->y1, area->x2, area->y2);
+
+  int non_black_pixel_count = 0;
+
+  // log the buffer
+  for (int i = 0; i < DISPLAY_VIRTUAL_LEDS_PIXEL_COUNT; i++)
+  {
+    uint16_t color = color_p[i].full;
+    if (color != 0x0000)
+    {
+      non_black_pixel_count++;
+      // if (color != 0xA310)
+      // {
+      //   Timber.i("%02X ", color);
+      // }
+    }
+  }
+  Timber.i("led display flush end");
+  Timber.i("non_black_pixel_count: %d out of %d", non_black_pixel_count, DISPLAY_VIRTUAL_LEDS_PIXEL_COUNT);
   lv_disp_flush_ready(disp); /* tell lvgl that flushing is done */
 }
 
@@ -252,8 +273,7 @@ void my_touchpad_read(lv_indev_drv_t *indev_driver, lv_indev_data_t *data)
     /*Set the coordinates*/
     data->point.x = touchX;
     data->point.y = touchY;
-    // screenTimer.time = millis();
-    // screenTimer.active = true;
+    time_of_last_touch = millis();
   }
 }
 
@@ -300,7 +320,7 @@ void loadSplash()
   int xOffset = 0;
   int yOffset = 0;
   tft.fillScreen(TFT_BLACK);
-  screenBrightness(200);
+  screenBrightness(lcd_brightness);
   for (int y = 0; y < h; y++)
   {
     for (int x = 0; x < w; x++)
@@ -309,7 +329,7 @@ void loadSplash()
     }
   }
 
-  delay(300);
+  delay(500);
 }
 
 void setup_virtual_leds_display()
@@ -323,26 +343,30 @@ void setup_virtual_leds_display()
   virtual_leds_drv.flush_cb = virtual_leds_disp_flush;
   virtual_leds_drv.draw_buf = &virtual_leds_draw_buf;
   virtual_leds_drv.full_refresh = true;
+  // virtual_leds_drv.direct_mode = true;
   display_virtual_leds = lv_disp_drv_register(&virtual_leds_drv);
 }
 
 void setup_virtual_leds_ui_screen()
 {
+  Timber.i("setup_virtual_leds_ui_screen");
+  lv_disp_set_default(display_virtual_leds);
   virtual_leds_ui_screen = lv_obj_create(NULL);
+
   lv_obj_set_size(virtual_leds_ui_screen, DISPLAY_VIRTUAL_LEDS_WIDTH, DISPLAY_VIRTUAL_LEDS_HEIGHT);
   lv_obj_set_pos(virtual_leds_ui_screen, 0, 0);
   lv_obj_set_style_bg_color(virtual_leds_ui_screen, lv_color_hex(0x000000), LV_PART_MAIN);
 
   // add an image to the screen
   lv_obj_t *image = lv_img_create(virtual_leds_ui_screen);
-  lv_img_set_src(image, &boomtown_bw_72_square);
   lv_obj_set_size(image, DISPLAY_VIRTUAL_LEDS_WIDTH, DISPLAY_VIRTUAL_LEDS_HEIGHT);
   lv_obj_set_pos(image, 0, 0);
   lv_obj_set_style_bg_color(image, lv_color_hex(0x000000), LV_PART_MAIN);
   lv_obj_set_style_bg_opa(image, LV_OPA_COVER, LV_PART_MAIN);
+  lv_img_set_src(image, &boomtown_bw_72_square);
 
-  lv_disp_set_default(display_virtual_leds);
-  lv_scr_load(virtual_leds_ui_screen);
+  lv_scr_load_anim(virtual_leds_ui_screen, LV_SCR_LOAD_ANIM_NONE, 0, 0, true);
+
   lv_disp_set_default(display_lcd);
 }
 
@@ -352,6 +376,7 @@ void hal_setup()
   Serial.begin(115200); /* prepare for possible serial debug */
 
   Timber.setLogCallback(logCallback);
+  Timber.showTime(true);
 
   Timber.i("Starting up device");
 
@@ -363,7 +388,7 @@ void hal_setup()
   tft.fillScreen(TFT_BLACK);
   loadSplash();
 
-  Serial.println(heapUsage());
+  Timber.i(heapUsage());
 
   lv_init();
 
@@ -399,7 +424,7 @@ void hal_setup()
   ui_init();
   setup_virtual_leds_ui_screen();
 
-  Serial.println(heapUsage());
+  Timber.i(heapUsage());
 
   // bool fsState = setupFS();
   // if (fsState)
@@ -419,20 +444,26 @@ void hal_setup()
 
   // load saved preferences
   int tm = prefs.getInt("timeout", 0);
-  int br = prefs.getInt("brightness", 100);
 
-  screenBrightness(br);
+  screenBrightness(prefs.getInt("lcd_brightness", 100));
 
 #ifdef ENABLE_APP_QMI8658C
 
   qmi8658_result = qmi8658c.open(&qmi8658_cfg);
   delay(100); // Delay for sensor initialization
 
-  // showError("IMU State", qmi8658c.resultToString(qmi8658_result));
+  Timber.i("IMU State: %s", qmi8658c.resultToString(qmi8658_result));
 
 #endif
 
-  lv_img_set_src(ui_ImagePreview, &boomtown_bw_72_square);
+  lv_dropdown_clear_options(ui_DropdownMode);
+  for (int i = 0; i < ARRAY_SIZE(gPatternNames); i++)
+  {
+    lv_dropdown_add_option(ui_DropdownMode, gPatternNames[i], i);
+    Timber.i("Pattern %d: %s", i, gPatternNames[i]);
+  }
+
+  //  lv_img_set_src(ui_ImagePreview, &boomtown_bw_72_square);
 
   Timber.i("Setup done");
 }
@@ -460,43 +491,42 @@ float get_gyro_z()
 void hal_loop()
 {
 
-  if (!transfer)
+  lv_timer_handler(); /* let the GUI do its work */
+
+  FastLED.setBrightness(lv_slider_get_value(ui_SliderLEDBrightness));
+
+  unsigned long current_time = millis();
+  unsigned long timeout_time = time_of_last_touch + SCREEN_TOUCH_TIMEOUT;
+  long time_remaining = timeout_time - current_time;
+  if (time_remaining < 0)
   {
-
-    lv_timer_handler(); /* let the GUI do its work */
-
-    FastLED.setBrightness(lv_slider_get_value(ui_SliderLEDBrightness));
-
-    lv_disp_t *display = lv_disp_get_default();
-    lv_obj_t *actScr = lv_disp_get_scr_act(display);
+    // If time_remaining is between 0 and -SCREEN_TOUCH_TIMEOUT_FADE_MS, interpolate brightness from 200 to 0
+    if (time_remaining >= -SCREEN_TOUCH_TIMEOUT_FADE_MS)
+    {
+      int brightness = (int)(((double)lcd_brightness) * (time_remaining + SCREEN_TOUCH_TIMEOUT_FADE_MS) / (double)SCREEN_TOUCH_TIMEOUT_FADE_MS);
+      if (brightness < 0)
+        brightness = 0;
+      if (brightness > lcd_brightness)
+        brightness = lcd_brightness;
+      screenBrightness(brightness);
+    }
+    else
+      screenBrightness(0);
   }
-}
-
-String hexString(uint8_t *arr, size_t len, bool caps, String separator)
-{
-  String hexString = "";
-  for (size_t i = 0; i < len; i++)
+  else
   {
-    char hex[3];
-    sprintf(hex, caps ? "%02X" : "%02x", arr[i]);
-    hexString += separator;
-    hexString += hex;
+    screenBrightness(lcd_brightness);
   }
-  return hexString;
-}
 
-String longHexString(unsigned long l)
-{
-  char buffer[9];             // Assuming a 32-bit long, which requires 8 characters for hex representation and 1 for null terminator
-  sprintf(buffer, "%08x", l); // Format as 8-digit hex with leading zeros
-  return String(buffer);
+  lv_disp_t *display = lv_disp_get_default();
+  lv_obj_t *actScr = lv_disp_get_scr_act(display);
 }
 
 void leds_setup()
 {
   // Serial.begin(115200);
   delay(1000);
-  Serial.println("Initializing LEDs");
+  Timber.i("Initializing LEDs");
   setup_leds();
 
   leds_setup_completed = true;
@@ -524,7 +554,7 @@ void leds_loop()
 
     if (fabs(z) > 200)
     {
-      Serial.printf("Gyro:  z:%f\n", z);
+      Timber.i("Gyro:  z:%f", z);
     }
   }
 #endif
@@ -532,7 +562,7 @@ void leds_loop()
   // do some periodic updates
   EVERY_N_MILLISECONDS(1) { gHue++; } // slowly cycle the "base color" through the rainbow
   // EVERY_N_SECONDS(5) { nextPattern(); } // change patterns periodically
-  EVERY_N_SECONDS(1) { Serial.printf("FPS: %d\n", FastLED.getFPS()); }
+  EVERY_N_SECONDS(1) { Timber.i("LED FPS: %d", FastLED.getFPS()); }
 }
 
 void onLEDBrightnessChanged(lv_event_t *e)
@@ -542,5 +572,14 @@ void onLEDBrightnessChanged(lv_event_t *e)
 
 void onButtonNextPatternClicked(lv_event_t *e)
 {
+  setup_virtual_leds_ui_screen();
+
   nextPattern();
+}
+
+void onDropdownPatternChanged(lv_event_t *e)
+{
+  int selectedIndex = lv_dropdown_get_selected(ui_DropdownMode);
+  Timber.i("onDropdownPatternChanged %d", selectedIndex);
+  setPatternIndex(selectedIndex);
 }

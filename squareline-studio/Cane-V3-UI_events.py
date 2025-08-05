@@ -6,3 +6,7 @@ def onLEDBrightnessChanged(event_struct):
 def onButtonNextPatternClicked(event_struct):
     return
 
+
+def onDropdownPatternChanged(event_struct):
+    return
+

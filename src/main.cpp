@@ -28,7 +28,7 @@ void loop()
 {
     leds_loop();
 
-    EVERY_N_MILLISECONDS(10)
+    EVERY_N_MILLISECONDS(5)
     {
         hal_loop();
     }
