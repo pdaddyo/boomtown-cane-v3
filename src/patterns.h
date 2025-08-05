@@ -48,9 +48,9 @@ void sinelon()
 void bpm()
 {
    // colored stripes pulsing at a defined Beats-Per-Minute (BPM)
-   uint8_t BeatsPerMinute = 174;
+   uint8_t BeatsPerMinute = 174 / 2;
    CRGBPalette16 palette = PartyColors_p;
-   uint8_t beat = beatsin8(BeatsPerMinute, 64, 255);
+   uint8_t beat = beatsin8(BeatsPerMinute, 2, 255);
    for (int i = 0; i < NUM_LEDS_EACH_SIDE; i++)
    { // 9948
       leds[i] = ColorFromPalette(palette, gHue + (i * 2), beat - gHue + (i * 10));
@@ -196,7 +196,7 @@ void transgenderFlag()
 
    // Configurable parameters
    const uint8_t wobbleAmplitude = 5; // How many LEDs to wobble up/down
-   const uint8_t wobbleSpeed = 10;    // Speed of wobble (lower = faster)
+   const uint8_t wobbleSpeed = 5;     // Speed of wobble (lower = faster)
 
    // Define the flag colors
    CRGB lightBlue = CRGB(91, 206, 250); // Light blue
@@ -249,7 +249,81 @@ void transgenderFlag()
       leds[i] = color;
    }
 
-   addGlitter(200);
+   // addGlitter(200);
+
+   // Animate the wobble
+   EVERY_N_MILLISECONDS(wobbleSpeed) { sOffset += 4; }
+}
+
+void prideFlag()
+{
+   // Pride flag colors: red, orange, yellow, green, blue, purple
+   // with animated wobble effect
+   static uint16_t sOffset = 0;
+
+   // Configurable parameters
+   const uint8_t wobbleAmplitude = 4; // How many LEDs to wobble up/down
+   const uint8_t wobbleSpeed = 5;     // Speed of wobble (lower = faster)
+
+   // Define the pride flag colors
+   CRGB red = CRGB(255, 0, 0);      // Red
+   CRGB orange = CRGB(255, 128, 0); // Orange
+   CRGB yellow = CRGB(255, 255, 0); // Yellow
+   CRGB green = CRGB(0, 255, 0);    // Green
+   CRGB blue = CRGB(0, 0, 255);     // Blue
+   CRGB purple = CRGB(128, 0, 255); // Purple
+
+   // Calculate stripe width based on total LEDs (6 stripes)
+   uint16_t stripeWidth = NUM_LEDS_EACH_SIDE / 6;
+
+   // Calculate wobble offset - simple up/down motion for entire flag
+   int8_t wobbleOffset = (sin8(sOffset) - 128) * wobbleAmplitude / 128;
+
+   for (uint16_t i = 0; i < NUM_LEDS_EACH_SIDE; i++)
+   {
+      // Apply wobble offset to position lookup
+      int16_t sourcePosition = i - wobbleOffset;
+
+      // Wrap around for smooth animation
+      if (sourcePosition < 0)
+         sourcePosition += NUM_LEDS_EACH_SIDE;
+      if (sourcePosition >= NUM_LEDS_EACH_SIDE)
+         sourcePosition -= NUM_LEDS_EACH_SIDE;
+
+      // Determine which stripe this position belongs to
+      uint16_t stripeIndex = sourcePosition / stripeWidth;
+      if (stripeIndex > 5)
+         stripeIndex = 5;
+
+      CRGB color;
+      switch (stripeIndex)
+      {
+      case 0:
+         color = red;
+         break;
+      case 1:
+         color = orange;
+         break;
+      case 2:
+         color = yellow;
+         break;
+      case 3:
+         color = green;
+         break;
+      case 4:
+         color = blue;
+         break;
+      case 5:
+      default:
+         color = purple;
+         break;
+      }
+
+      leds[i] = color;
+   }
+
+   // Add subtle sparkle effect
+   // addGlitter(120);
 
    // Animate the wobble
    EVERY_N_MILLISECONDS(wobbleSpeed) { sOffset += 4; }
@@ -267,7 +341,8 @@ SimplePatternList gPatterns = {
     rainbowWithGlitter,
     sinelon,
     confetti,
-    transgenderFlag};
+    transgenderFlag,
+    prideFlag};
 
 // pattern names
 const char *gPatternNames[] = {
@@ -280,6 +355,7 @@ const char *gPatternNames[] = {
     "Sinelon",
     "Confetti",
     "Trans Flag",
+    "Pride Flag",
 };
 
 void setCurrentPatternLabel()

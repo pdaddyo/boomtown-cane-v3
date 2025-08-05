@@ -543,7 +543,6 @@ void leds_loop()
   // send the 'leds' array out to the actual LED strip
   FastLED.show();
   FastLED.countFPS();
-  gHue++;
 
 #ifndef USE_SDL
   EVERY_N_MILLISECONDS(100)
@@ -560,7 +559,7 @@ void leds_loop()
 #endif
 
   // do some periodic updates
-  EVERY_N_MILLISECONDS(1) { gHue++; } // slowly cycle the "base color" through the rainbow
+  EVERY_N_MILLISECONDS(1) { gHue--; } // slowly cycle the "base color" through the rainbow
   // EVERY_N_SECONDS(5) { nextPattern(); } // change patterns periodically
   EVERY_N_SECONDS(1) { Timber.i("LED FPS: %d", FastLED.getFPS()); }
 }
