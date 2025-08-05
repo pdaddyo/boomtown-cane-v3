@@ -3,9 +3,6 @@
 uint8_t gCurrentPatternNumber = 0; // Index number of which pattern is current
 uint8_t gHue = 0;                  // rotating "base color" used by many of the patterns
 
-uint8_t fire_sparking = 90;
-uint8_t fire_cooling = 80;
-
 #define ARRAY_SIZE(A) (sizeof(A) / sizeof((A)[0]))
 
 void rainbow()
@@ -48,10 +45,10 @@ void sinelon()
 void bpm()
 {
    // colored stripes pulsing at a defined Beats-Per-Minute (BPM)
-   uint8_t BeatsPerMinute = 174 / 2;
+   uint8_t BeatsPerMinute = 120;
    CRGBPalette16 palette = PartyColors_p;
-   uint8_t beat = beatsin8(BeatsPerMinute, 2, 255);
-   for (int i = 0; i < NUM_LEDS_EACH_SIDE; i++)
+   uint8_t beat = beatsin8(BeatsPerMinute, 60, 255);
+   for (int i = NUM_LEDS_EACH_SIDE - 1; i >= 0; i--)
    { // 9948
       leds[i] = ColorFromPalette(palette, gHue + (i * 2), beat - gHue + (i * 10));
    }
@@ -139,6 +136,9 @@ void rainbowSlide()
 // COOLING: How much does the air cool as it rises?
 // Less cooling = taller flames.  More cooling = shorter flames.
 // Default 50, suggested range 20-100
+
+uint8_t fire_sparking = 90;
+uint8_t fire_cooling = 80;
 #define COOLING fire_cooling
 
 // SPARKING: What chance (out of 255) is there that a new spark will be lit?
@@ -358,8 +358,53 @@ const char *gPatternNames[] = {
     "Pride Flag",
 };
 
+void setModeContainer(uint8_t index)
+{
+   lv_obj_t *gModeContainers[] = {
+       ui_ContainerSettingsFire,
+       NULL, // bpm
+       NULL, // juggle
+       NULL, // rainbow
+       NULL, // rainbowSlide
+       NULL, // rainbowWithGlitter
+       NULL, // sinelon
+       NULL, // confetti
+       NULL, // transgenderFlag
+       NULL, // prideFlag
+   };
+
+   if (index >= ARRAY_SIZE(gModeContainers))
+   {
+      Timber.e("Invalid index %d", index);
+      return;
+   }
+   // lv_obj_add_flag(ui_ContainerSettingsFire, LV_OBJ_FLAG_HIDDEN);
+
+   // return;
+   for (uint8_t i = 0; i < ARRAY_SIZE(gModeContainers); i++)
+   {
+      lv_obj_t *modeContainer = gModeContainers[i];
+      if (modeContainer != NULL)
+      {
+         if (i != index)
+         {
+            Timber.i("Hiding mode container %d", i);
+            lv_obj_add_flag(modeContainer, LV_OBJ_FLAG_HIDDEN);
+         }
+         else
+         {
+            if (lv_obj_has_flag(modeContainer, LV_OBJ_FLAG_HIDDEN))
+            {
+               lv_obj_clear_flag(modeContainer, LV_OBJ_FLAG_HIDDEN);
+            }
+         }
+      }
+   }
+}
+
 void setCurrentPatternLabel()
 {
+   lv_dropdown_set_selected(ui_DropdownMode, gCurrentPatternNumber);
    // lv_label_set_text(ui_LabelCurrentPattern, gPatternNames[gCurrentPatternNumber]);
 }
 
@@ -367,10 +412,17 @@ void setPatternIndex(uint8_t index)
 {
    gCurrentPatternNumber = index;
    setCurrentPatternLabel();
+   setModeContainer(index);
 }
 
 void nextPattern()
 {
    // add one to the current pattern number, and wrap around at the end
    setPatternIndex((gCurrentPatternNumber + 1) % ARRAY_SIZE(gPatterns));
+}
+
+void prevPattern()
+{
+   // subtract one from the current pattern number, and wrap around at the end
+   setPatternIndex((gCurrentPatternNumber - 1 + ARRAY_SIZE(gPatterns)) % ARRAY_SIZE(gPatterns));
 }

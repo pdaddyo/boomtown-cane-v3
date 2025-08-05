@@ -359,10 +359,10 @@ typedef FF_DIR DIR;
 #define LV_FONT_MONTSERRAT_14 1
 #define LV_FONT_MONTSERRAT_16 1
 #define LV_FONT_MONTSERRAT_18 1
-#define LV_FONT_MONTSERRAT_20 0
-#define LV_FONT_MONTSERRAT_22 0
+#define LV_FONT_MONTSERRAT_20 1
+#define LV_FONT_MONTSERRAT_22 1
 #define LV_FONT_MONTSERRAT_24 0
-#define LV_FONT_MONTSERRAT_26 0
+#define LV_FONT_MONTSERRAT_26 1
 #define LV_FONT_MONTSERRAT_28 1
 #define LV_FONT_MONTSERRAT_30 0
 #define LV_FONT_MONTSERRAT_32 0
@@ -378,6 +378,9 @@ typedef FF_DIR DIR;
 /*Demonstrate special features*/
 #define LV_FONT_MONTSERRAT_16_SUBPX      0
 #define LV_FONT_MONTSERRAT_14_SUBPX      0
+#define LV_FONT_MONTSERRAT_20_COMPRESSED 1  /*bpp = 3*/
+#define LV_FONT_MONTSERRAT_22_COMPRESSED 1  /*bpp = 3*/
+#define LV_FONT_MONTSERRAT_26_COMPRESSED 1  /*bpp = 3*/
 #define LV_FONT_MONTSERRAT_28_COMPRESSED 1  /*bpp = 3*/
 #define LV_FONT_DEJAVU_16_PERSIAN_HEBREW 0  /*Hebrew, Arabic, Persian letters and all their forms*/
 // #define LV_FONT_SIMSUN_16_CJK            1  /*1000 most common CJK radicals*/
@@ -392,7 +395,7 @@ typedef FF_DIR DIR;
 #define LV_FONT_CUSTOM_DECLARE
 
 /*Always set a default font*/
-#define LV_FONT_DEFAULT &lv_font_montserrat_14
+#define LV_FONT_DEFAULT &lv_font_montserrat_18
 
 /*Enable handling large font and/or fonts with a lot of characters.
  *The limit depends on the font size, font face and bpp.
@@ -400,7 +403,7 @@ typedef FF_DIR DIR;
 #define LV_FONT_FMT_TXT_LARGE 0
 
 /*Enables/disables support for compressed fonts.*/
-#define LV_USE_FONT_COMPRESSED 0
+#define LV_USE_FONT_COMPRESSED 1
 
 /*Enable subpixel rendering*/
 #define LV_USE_FONT_SUBPX 0

@@ -571,9 +571,24 @@ void onLEDBrightnessChanged(lv_event_t *e)
 
 void onButtonNextPatternClicked(lv_event_t *e)
 {
-  setup_virtual_leds_ui_screen();
-
+  // setup_virtual_leds_ui_screen();
   nextPattern();
+}
+
+void onButtonPrevClicked(lv_event_t *e)
+{
+  // setup_virtual_leds_ui_screen();
+  prevPattern();
+}
+
+void onFireSparkingChanged(lv_event_t *e)
+{
+  fire_sparking = lv_slider_get_value(ui_SliderFireSparking);
+}
+
+void onFireCoolingChanged(lv_event_t *e)
+{
+  fire_cooling = lv_slider_get_value(ui_SliderFireCooling);
 }
 
 void onDropdownPatternChanged(lv_event_t *e)

@@ -10,3 +10,15 @@ def onButtonNextPatternClicked(event_struct):
 def onDropdownPatternChanged(event_struct):
     return
 
+
+def onButtonPrevClicked(event_struct):
+    return
+
+
+def onFireSparkingChanged(event_struct):
+    return
+
+
+def onFireCoolingChanged(event_struct):
+    return
+
