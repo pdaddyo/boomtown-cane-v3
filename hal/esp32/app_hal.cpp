@@ -440,16 +440,10 @@ void loadImageButtons()
 {
   lv_obj_clean(ui_ContainerImages);
 
-  bool first = true;
   // loop throw image_array
   for (auto index = 0; index < ARRAY_SIZE(image_array); index++)
   {
     lv_obj_t *button = createImageButton(image_array[index]);
-    if (first)
-    {
-      lv_obj_add_state(button, LV_STATE_CHECKED);
-      first = false;
-    }
   }
 }
 

@@ -66,3 +66,7 @@ def onColourWheelChanged(event_struct):
 def onSelectAll(event_struct):
     return
 
+
+def onDropdownFirePaletteChanged(event_struct):
+    return
+

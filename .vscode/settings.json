@@ -82,6 +82,8 @@
     "typeinfo": "cpp",
     "variant": "cpp",
     "bt_text.c": "cpp",
-    "heart2.c": "cpp"
+    "heart2.c": "cpp",
+    "happy.c": "cpp",
+    "hearts_wide.c": "cpp"
   }
 }

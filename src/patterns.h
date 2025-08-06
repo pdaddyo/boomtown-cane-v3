@@ -24,6 +24,23 @@ uint8_t hue_delay = 1;
 bool always_swipe = false;
 lv_color_hsv_t selected_hsv = {0, 255, 255};
 
+lv_obj_t *image_on_virtual_screen = NULL;
+float gyro_trigger_threshold = 100;
+float gyro_swipe_end_threshold = 30;
+
+// -1 = right to left
+// 0 = not triggered
+// 1 = left to right
+bool swipe_in_progress = false;
+int8_t gyro_last_direction = 0;
+float gyro_last_trigger_force = 0;
+unsigned long swipe_trigger_time = 0;
+unsigned long last_swipe_duration = 0;
+
+unsigned int image_index_to_swipe = 0;
+unsigned int swipe_count_on_current_image = 0;
+lv_img_dsc_t *image_to_swipe = NULL;
+
 #define ARRAY_SIZE(A) (sizeof(A) / sizeof((A)[0]))
 
 uint8_t selected_palette_index = 0;
@@ -382,8 +399,8 @@ void palestineFlag()
    static uint16_t sOffset = 0;
 
    // Configurable parameters
-   const uint8_t wobbleAmplitude = 5; // How many LEDs to wobble up/down
-   const uint8_t wobbleSpeed = 10;    // Speed of wobble (lower = faster)
+   const uint8_t wobbleAmplitude = 3; // How many LEDs to wobble up/down
+   const uint8_t wobbleSpeed = 20;    // Speed of wobble (lower = faster)
 
    // Define the flag colors
    CRGB black = CRGB(0, 0, 0);       // Black
@@ -501,22 +518,6 @@ const char *gPatternNames[] = {
     "Colour",
 };
 
-lv_obj_t *image_on_virtual_screen = NULL;
-float gyro_trigger_threshold = 100;
-float gyro_swipe_end_threshold = 30;
-
-// -1 = right to left
-// 0 = not triggered
-// 1 = left to right
-bool swipe_in_progress = false;
-int8_t gyro_last_direction = 0;
-float gyro_last_trigger_force = 0;
-unsigned long swipe_trigger_time = 0;
-unsigned long last_swipe_duration = 0;
-
-unsigned int image_index_to_swipe = 0;
-lv_img_dsc_t *image_to_swipe = NULL;
-
 struct RGBA
 {
    union
@@ -573,10 +574,13 @@ void setFirstSelectedImageIndex()
    {
       image_index_to_swipe = 0;
    }
+
+   swipe_count_on_current_image = 0;
 }
 
 void setNextSelectedImageIndex()
 {
+   swipe_count_on_current_image = 0;
    auto current_image_index = image_index_to_swipe;
 
    for (int i = 0; i < lv_obj_get_child_cnt(ui_ContainerImages); i++)
@@ -606,7 +610,11 @@ void swipeEnd()
    unsigned long current_time = millis();
    last_swipe_duration = current_time - swipe_trigger_time;
    Timber.i("Swipe end, duration: %dms", last_swipe_duration);
-   setNextSelectedImageIndex();
+   swipe_count_on_current_image++;
+   if (swipe_count_on_current_image > 1)
+   {
+      setNextSelectedImageIndex();
+   }
 }
 
 void swipeImage(uint8_t image_index, float duration)
