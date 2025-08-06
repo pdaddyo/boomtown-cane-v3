@@ -26,6 +26,29 @@ lv_color_hsv_t selected_hsv = {0, 255, 255};
 
 #define ARRAY_SIZE(A) (sizeof(A) / sizeof((A)[0]))
 
+uint8_t selected_palette_index = 0;
+static const char *const palette_names[] = {
+    "Heat",
+    "Cloud",
+    "Lava",
+    "Ocean",
+    "Forest",
+    "Rainbow",
+    "Stripe",
+    "Party",
+};
+
+static const TProgmemRGBPalette16 *const palette_pointers[] = {
+    &HeatColors_p,
+    &CloudColors_p,
+    &LavaColors_p,
+    &OceanColors_p,
+    &ForestColors_p,
+    &RainbowColors_p,
+    &RainbowStripeColors_p,
+    &PartyColors_p,
+};
+
 void rainbow()
 {
    // FastLED's built-in rainbow generator
@@ -160,6 +183,7 @@ void rainbowSlide()
 
 uint8_t fire_sparking = 90;
 uint8_t fire_cooling = 80;
+
 #define COOLING fire_cooling
 
 // SPARKING: What chance (out of 255) is there that a new spark will be lit?
@@ -195,7 +219,8 @@ void Fire2012()
    // Step 4.  Map from heat cells to LED colors
    for (int j = 0; j < NUM_LEDS_EACH_SIDE; j++)
    {
-      CRGB color = HeatColor(heat[j]);
+      // CRGB color = HeatColor(heat[j]);
+      CRGB color = ColorFromPalette(*palette_pointers[selected_palette_index], heat[j], 255, LINEARBLEND);
       int pixelnumber;
       if (gReverseDirection)
       {
@@ -350,6 +375,84 @@ void prideFlag()
    EVERY_N_MILLISECONDS(wobbleSpeed) { sOffset += 4; }
 }
 
+void palestineFlag()
+{
+   // Palestine flag colors: black, white, green with red triangle
+   // with animated wobble effect
+   static uint16_t sOffset = 0;
+
+   // Configurable parameters
+   const uint8_t wobbleAmplitude = 5; // How many LEDs to wobble up/down
+   const uint8_t wobbleSpeed = 10;    // Speed of wobble (lower = faster)
+
+   // Define the flag colors
+   CRGB black = CRGB(0, 0, 0);       // Black
+   CRGB white = CRGB(255, 255, 255); // White
+   CRGB green = CRGB(0, 128, 0);     // Green
+   CRGB red = CRGB(255, 0, 0);       // Red
+
+   // Calculate stripe width based on total LEDs (3 stripes)
+   uint16_t stripeWidth = NUM_LEDS_EACH_SIDE / 3;
+   // Red triangle takes up about 1/3 of the flag width
+   uint16_t triangleWidth = NUM_LEDS_EACH_SIDE / 3;
+
+   // Calculate wobble offset - simple up/down motion for entire flag
+   int8_t wobbleOffset = (sin8(sOffset) - 128) * wobbleAmplitude / 128;
+
+   for (uint16_t i = 0; i < NUM_LEDS_EACH_SIDE; i++)
+   {
+      // Apply wobble offset to position lookup
+      int16_t sourcePosition = i - wobbleOffset;
+
+      // Wrap around for smooth animation
+      if (sourcePosition < 0)
+         sourcePosition += NUM_LEDS_EACH_SIDE;
+      if (sourcePosition >= NUM_LEDS_EACH_SIDE)
+         sourcePosition -= NUM_LEDS_EACH_SIDE;
+
+      // Determine which stripe this position belongs to
+      uint16_t stripeIndex = sourcePosition / stripeWidth;
+      if (stripeIndex > 2)
+         stripeIndex = 2;
+
+      CRGB color;
+      switch (stripeIndex)
+      {
+      case 0:
+         color = black;
+         break;
+      case 1:
+         color = white;
+         break;
+      case 2:
+      default:
+         color = green;
+         break;
+      }
+
+      // Add red triangle on the left side
+      // Triangle height decreases linearly from left to right
+      float triangleRatio = (float)(triangleWidth - sourcePosition) / (float)triangleWidth;
+      if (sourcePosition < triangleWidth && triangleRatio > 0)
+      {
+         // Calculate if this LED should be red based on triangle shape
+         float normalizedStripePosition = (float)(sourcePosition % stripeWidth) / (float)stripeWidth;
+         float triangleThreshold = 0.5f - (triangleRatio * 0.5f);
+         float triangleThresholdUpper = 0.5f + (triangleRatio * 0.5f);
+
+         if (normalizedStripePosition >= triangleThreshold && normalizedStripePosition <= triangleThresholdUpper)
+         {
+            color = red;
+         }
+      }
+
+      leds[i] = color;
+   }
+
+   // Animate the wobble
+   EVERY_N_MILLISECONDS(wobbleSpeed) { sOffset += 4; }
+}
+
 void solidColour()
 {
    for (int i = 0; i < NUM_LEDS; i++)
@@ -379,6 +482,7 @@ SimplePatternList gPatterns = {
     confetti,
     transgenderFlag,
     prideFlag,
+    palestineFlag,
     solidColour};
 // pattern names
 const char *gPatternNames[] = {
@@ -393,6 +497,7 @@ const char *gPatternNames[] = {
     "Confetti",
     "Trans Flag",
     "Pride Flag",
+    "Palestine Flag",
     "Colour",
 };
 
@@ -579,7 +684,7 @@ void swipeImage(uint8_t image_index, float duration)
       FastLED.show();
       // auto delay_time = (unsigned long)(duration / 2.0F / (float)width);
       // Timber.i("delay_time: %d", delay_time);
-      if (width < 100)
+      if (width < 111)
       {
          delay(1);
       }
@@ -689,6 +794,7 @@ void setModeContainer(uint8_t index)
        NULL, // confetti
        NULL, // transgenderFlag
        NULL, // prideFlag
+       NULL, // palestineFlag
        ui_ContainerSettingsColour};
 
    if (index >= ARRAY_SIZE(gModeContainers))

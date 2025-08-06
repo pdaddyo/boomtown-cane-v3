@@ -5,6 +5,9 @@
 #include "images/boomtown_new.c"
 #include "images/heart1.c"
 #include "images/heart2.c"
+#include "images/respect_1.c"
+#include "images/respect_2.c"
+#include "images/respect_3.c"
 
 // Map of image names to their descriptor objects
 
@@ -19,6 +22,9 @@ extern const lv_img_dsc_t bt_text;
 extern const lv_img_dsc_t heart1;
 extern const lv_img_dsc_t heart2;
 extern const lv_img_dsc_t mario;
+extern const lv_img_dsc_t respect_1;
+extern const lv_img_dsc_t respect_2;
+extern const lv_img_dsc_t respect_3;
 
 // Map of image names to descriptors
 static const std::map<std::string, const lv_img_dsc_t *> image_map = {
@@ -29,6 +35,9 @@ static const std::map<std::string, const lv_img_dsc_t *> image_map = {
     {"heart1", &heart1},
     {"heart2", &heart2},
     {"mario", &mario},
+    {"respect_1", &respect_1},
+    {"respect_2", &respect_2},
+    {"respect_3", &respect_3},
 };
 
 static const lv_img_dsc_t *image_array[] = {
@@ -39,4 +48,7 @@ static const lv_img_dsc_t *image_array[] = {
     &heart1,
     &heart2,
     &mario,
+    &respect_1,
+    &respect_2,
+    &respect_3,
 };

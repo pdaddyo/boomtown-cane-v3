@@ -81,6 +81,7 @@
     "cinttypes": "cpp",
     "typeinfo": "cpp",
     "variant": "cpp",
-    "bt_text.c": "cpp"
+    "bt_text.c": "cpp",
+    "heart2.c": "cpp"
   }
 }

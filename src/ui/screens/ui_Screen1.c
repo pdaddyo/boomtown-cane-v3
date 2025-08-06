@@ -26,6 +26,7 @@ lv_obj_t *ui_ImageExample1;
 lv_obj_t *ui_ContainerSettingsColour;
 lv_obj_t *ui_ColorWheel;
 lv_obj_t *ui_ContainerSettingsFire;
+lv_obj_t *ui_DropdownFirePalette;
 lv_obj_t *ui_ContainerSparking;
 lv_obj_t *ui_Label4;
 lv_obj_t *ui_SliderFireSparking;
@@ -89,14 +90,6 @@ if ( event_code == LV_EVENT_VALUE_CHANGED &&  !lv_obj_has_state(target,LV_STATE_
 }
 }
 
-void ui_event_ContainerImages( lv_event_t * e) {
-    lv_event_code_t event_code = lv_event_get_code(e);
-
-if ( event_code == LV_EVENT_LONG_PRESSED) {
-      onSelectAllImages( e );
-}
-}
-
 void ui_event_ContainerSettingsColour( lv_event_t * e) {
     lv_event_code_t event_code = lv_event_get_code(e);
 
@@ -110,6 +103,14 @@ void ui_event_ColorWheel( lv_event_t * e) {
 
 if ( event_code == LV_EVENT_VALUE_CHANGED) {
       onColourWheelChanged( e );
+}
+}
+
+void ui_event_DropdownFirePalette( lv_event_t * e) {
+    lv_event_code_t event_code = lv_event_get_code(e);
+
+if ( event_code == LV_EVENT_VALUE_CHANGED) {
+      onDropdownFirePaletteChanged( e );
 }
 }
 
@@ -333,6 +334,7 @@ lv_obj_set_height( ui_ContainerSettingsImage, LV_SIZE_CONTENT);   /// 1
 lv_obj_set_align( ui_ContainerSettingsImage, LV_ALIGN_CENTER );
 lv_obj_set_flex_flow(ui_ContainerSettingsImage,LV_FLEX_FLOW_COLUMN_WRAP);
 lv_obj_set_flex_align(ui_ContainerSettingsImage, LV_FLEX_ALIGN_START, LV_FLEX_ALIGN_START, LV_FLEX_ALIGN_START);
+lv_obj_add_flag( ui_ContainerSettingsImage, LV_OBJ_FLAG_HIDDEN );   /// Flags
 lv_obj_clear_flag( ui_ContainerSettingsImage, LV_OBJ_FLAG_CLICKABLE | LV_OBJ_FLAG_SCROLLABLE );    /// Flags
 lv_obj_set_style_pad_row(ui_ContainerSettingsImage, 20, LV_PART_MAIN| LV_STATE_DEFAULT);
 lv_obj_set_style_pad_column(ui_ContainerSettingsImage, 0, LV_PART_MAIN| LV_STATE_DEFAULT);
@@ -412,6 +414,7 @@ lv_obj_set_y( ui_ContainerSettingsColour, -114 );
 lv_obj_set_align( ui_ContainerSettingsColour, LV_ALIGN_CENTER );
 lv_obj_set_flex_flow(ui_ContainerSettingsColour,LV_FLEX_FLOW_ROW_WRAP);
 lv_obj_set_flex_align(ui_ContainerSettingsColour, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_START, LV_FLEX_ALIGN_START);
+lv_obj_add_flag( ui_ContainerSettingsColour, LV_OBJ_FLAG_HIDDEN );   /// Flags
 lv_obj_clear_flag( ui_ContainerSettingsColour, LV_OBJ_FLAG_CLICKABLE | LV_OBJ_FLAG_GESTURE_BUBBLE | LV_OBJ_FLAG_SCROLLABLE | LV_OBJ_FLAG_SCROLL_ELASTIC | LV_OBJ_FLAG_SCROLL_CHAIN );    /// Flags
 lv_obj_set_scrollbar_mode(ui_ContainerSettingsColour, LV_SCROLLBAR_MODE_OFF);
 lv_obj_set_style_radius(ui_ContainerSettingsColour, 10, LV_PART_MAIN| LV_STATE_DEFAULT);
@@ -442,6 +445,34 @@ lv_obj_clear_flag( ui_ContainerSettingsFire, LV_OBJ_FLAG_CLICKABLE | LV_OBJ_FLAG
 lv_obj_set_style_radius(ui_ContainerSettingsFire, 10, LV_PART_MAIN| LV_STATE_DEFAULT);
 lv_obj_set_style_pad_row(ui_ContainerSettingsFire, 20, LV_PART_MAIN| LV_STATE_DEFAULT);
 lv_obj_set_style_pad_column(ui_ContainerSettingsFire, 0, LV_PART_MAIN| LV_STATE_DEFAULT);
+
+ui_DropdownFirePalette = lv_dropdown_create(ui_ContainerSettingsFire);
+lv_dropdown_set_options( ui_DropdownFirePalette, "Heat\nCloud" );
+lv_obj_set_width( ui_DropdownFirePalette, lv_pct(100));
+lv_obj_set_height( ui_DropdownFirePalette, LV_SIZE_CONTENT);   /// 1
+lv_obj_set_align( ui_DropdownFirePalette, LV_ALIGN_CENTER );
+lv_obj_add_flag( ui_DropdownFirePalette, LV_OBJ_FLAG_SCROLL_ON_FOCUS );   /// Flags
+lv_obj_clear_flag( ui_DropdownFirePalette, LV_OBJ_FLAG_SCROLL_CHAIN );    /// Flags
+lv_obj_set_scroll_dir(ui_DropdownFirePalette, LV_DIR_VER);
+lv_obj_set_style_text_color(ui_DropdownFirePalette, lv_color_hex(0x5BCEFA), LV_PART_MAIN | LV_STATE_DEFAULT );
+lv_obj_set_style_text_opa(ui_DropdownFirePalette, 255, LV_PART_MAIN| LV_STATE_DEFAULT);
+lv_obj_set_style_text_font(ui_DropdownFirePalette, &lv_font_montserrat_22, LV_PART_MAIN| LV_STATE_DEFAULT);
+lv_obj_set_style_radius(ui_DropdownFirePalette, 10, LV_PART_MAIN| LV_STATE_DEFAULT);
+lv_obj_set_style_bg_color(ui_DropdownFirePalette, lv_color_hex(0x5BCEFA), LV_PART_MAIN | LV_STATE_DEFAULT );
+lv_obj_set_style_bg_opa(ui_DropdownFirePalette, 40, LV_PART_MAIN| LV_STATE_DEFAULT);
+lv_obj_set_style_border_color(ui_DropdownFirePalette, lv_color_hex(0xFF69B4), LV_PART_MAIN | LV_STATE_DEFAULT );
+lv_obj_set_style_border_opa(ui_DropdownFirePalette, 200, LV_PART_MAIN| LV_STATE_DEFAULT);
+lv_obj_set_style_border_width(ui_DropdownFirePalette, 3, LV_PART_MAIN| LV_STATE_DEFAULT);
+lv_obj_set_style_border_side(ui_DropdownFirePalette, LV_BORDER_SIDE_BOTTOM, LV_PART_MAIN| LV_STATE_DEFAULT);
+lv_obj_set_style_pad_left(ui_DropdownFirePalette, 10, LV_PART_MAIN| LV_STATE_DEFAULT);
+lv_obj_set_style_pad_right(ui_DropdownFirePalette, 10, LV_PART_MAIN| LV_STATE_DEFAULT);
+lv_obj_set_style_pad_top(ui_DropdownFirePalette, 10, LV_PART_MAIN| LV_STATE_DEFAULT);
+lv_obj_set_style_pad_bottom(ui_DropdownFirePalette, 10, LV_PART_MAIN| LV_STATE_DEFAULT);
+
+lv_obj_set_style_text_font(lv_dropdown_get_list(ui_DropdownFirePalette), &lv_font_montserrat_20,  LV_PART_MAIN| LV_STATE_DEFAULT);
+
+lv_obj_set_style_bg_color(lv_dropdown_get_list(ui_DropdownFirePalette), lv_color_hex(0x5BCEFA),  LV_PART_SELECTED | LV_STATE_DEFAULT );
+lv_obj_set_style_bg_opa(lv_dropdown_get_list(ui_DropdownFirePalette), 255,  LV_PART_SELECTED| LV_STATE_DEFAULT);
 
 ui_ContainerSparking = lv_obj_create(ui_ContainerSettingsFire);
 lv_obj_remove_style_all(ui_ContainerSparking);
@@ -893,9 +924,9 @@ lv_obj_add_event_cb(ui_DropdownMode, ui_event_DropdownMode, LV_EVENT_ALL, NULL);
 lv_obj_add_event_cb(ui_ButtonPrevPattern, ui_event_ButtonPrevPattern, LV_EVENT_ALL, NULL);
 lv_obj_add_event_cb(ui_ButtonNextPattern, ui_event_ButtonNextPattern, LV_EVENT_ALL, NULL);
 lv_obj_add_event_cb(ui_SwitchAlwaysSwipe, ui_event_SwitchAlwaysSwipe, LV_EVENT_ALL, NULL);
-lv_obj_add_event_cb(ui_ContainerImages, ui_event_ContainerImages, LV_EVENT_ALL, NULL);
 lv_obj_add_event_cb(ui_ColorWheel, ui_event_ColorWheel, LV_EVENT_ALL, NULL);
 lv_obj_add_event_cb(ui_ContainerSettingsColour, ui_event_ContainerSettingsColour, LV_EVENT_ALL, NULL);
+lv_obj_add_event_cb(ui_DropdownFirePalette, ui_event_DropdownFirePalette, LV_EVENT_ALL, NULL);
 lv_obj_add_event_cb(ui_SliderFireSparking, ui_event_SliderFireSparking, LV_EVENT_ALL, NULL);
 lv_obj_add_event_cb(ui_SliderFireCooling, ui_event_SliderFireCooling, LV_EVENT_ALL, NULL);
 lv_obj_add_event_cb(ui_SwitchFlashMode, ui_event_SwitchFlashMode, LV_EVENT_ALL, NULL);
@@ -932,6 +963,7 @@ ui_ImageExample1= NULL;
 ui_ContainerSettingsColour= NULL;
 ui_ColorWheel= NULL;
 ui_ContainerSettingsFire= NULL;
+ui_DropdownFirePalette= NULL;
 ui_ContainerSparking= NULL;
 ui_Label4= NULL;
 ui_SliderFireSparking= NULL;

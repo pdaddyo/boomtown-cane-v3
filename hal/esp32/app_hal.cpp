@@ -546,6 +546,13 @@ void hal_setup()
     Timber.i("Pattern %d: %s", i, gPatternNames[i]);
   }
 
+  lv_dropdown_clear_options(ui_DropdownFirePalette);
+  for (int i = 0; i < ARRAY_SIZE(palette_names); i++)
+  {
+    lv_dropdown_add_option(ui_DropdownFirePalette, palette_names[i], i);
+    Timber.i("Palette %d: %s", i, palette_names[i]);
+  }
+
   selected_hsv = lv_colorwheel_get_hsv(ui_ColorWheel);
 
   setModeContainer(0);
@@ -767,4 +774,9 @@ void onColourWheelChanged(lv_event_t *e)
 {
   selected_hsv = lv_colorwheel_get_hsv(ui_ColorWheel);
   //  Timber.i("Colour wheel changed: hue: %d, saturation: %d, value: %d", selected_hsv.h, selected_hsv.s, selected_hsv.v);
+}
+
+void onDropdownFirePaletteChanged(lv_event_t *e)
+{
+  selected_palette_index = lv_dropdown_get_selected(ui_DropdownFirePalette);
 }
