@@ -30,6 +30,7 @@ extern lv_obj_t *ui_Label8;
 extern void ui_event_SwitchAlwaysSwipe( lv_event_t * e);
 extern lv_obj_t *ui_SwitchAlwaysSwipe;
 extern lv_obj_t *ui_ContainerSettingsImage;
+extern void ui_event_ContainerImages( lv_event_t * e);
 extern lv_obj_t *ui_ContainerImages;
 extern lv_obj_t *ui_ButtonImageExample;
 extern lv_obj_t *ui_ImageExample;

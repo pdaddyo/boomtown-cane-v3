@@ -62,3 +62,7 @@ def onAlwaysSwipeChecked(event_struct):
 def onColourWheelChanged(event_struct):
     return
 
+
+def onSelectAll(event_struct):
+    return
+

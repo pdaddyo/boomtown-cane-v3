@@ -2140,7 +2140,7 @@
                                   {
                                     "nid": 1020,
                                     "strtype": "IMAGE/Asset",
-                                    "strval": "",
+                                    "strval": "-",
                                     "InheritedType": 5
                                   },
                                   {
@@ -2506,7 +2506,7 @@
                                   {
                                     "nid": 1020,
                                     "strtype": "IMAGE/Asset",
-                                    "strval": "",
+                                    "strval": "-",
                                     "InheritedType": 5
                                   },
                                   {
@@ -2892,6 +2892,71 @@
                             "strtype": "CONTAINER/Style_scrollbar",
                             "strval": "lv.PART.SCROLLBAR, Rectangle, Pad",
                             "InheritedType": 11
+                          },
+                          {
+                            "disabled": false,
+                            "nid": 1000476,
+                            "strtype": "_event/EventHandler",
+                            "strval": "LONG_PRESSED",
+                            "childs": [
+                              {
+                                "nid": 1000477,
+                                "strtype": "_event/name",
+                                "strval": "SelectAll",
+                                "InheritedType": 10
+                              },
+                              {
+                                "nid": 1000478,
+                                "strtype": "_event/condition_C",
+                                "strval": "",
+                                "InheritedType": 10
+                              },
+                              {
+                                "nid": 1000479,
+                                "strtype": "_event/condition_P",
+                                "strval": "",
+                                "InheritedType": 10
+                              },
+                              {
+                                "nid": 1000480,
+                                "strtype": "_event/action",
+                                "strval": "CALL FUNCTION",
+                                "childs": [
+                                  {
+                                    "nid": 1000481,
+                                    "strtype": "CALL FUNCTION/Name",
+                                    "strval": "CALL FUNCTION",
+                                    "InheritedType": 10
+                                  },
+                                  {
+                                    "nid": 1000482,
+                                    "strtype": "CALL FUNCTION/Call",
+                                    "strval": "<{Function_name}>( event_struct )",
+                                    "InheritedType": 10
+                                  },
+                                  {
+                                    "nid": 1000483,
+                                    "strtype": "CALL FUNCTION/CallC",
+                                    "strval": "<{Function_name}>( e );",
+                                    "InheritedType": 10
+                                  },
+                                  {
+                                    "nid": 1000484,
+                                    "strtype": "CALL FUNCTION/Function_name",
+                                    "strval": "onSelectAllImages",
+                                    "InheritedType": 10
+                                  },
+                                  {
+                                    "nid": 1000485,
+                                    "strtype": "CALL FUNCTION/Dont_export_function",
+                                    "strval": "True",
+                                    "InheritedType": 2
+                                  }
+                                ],
+                                "InheritedType": 10
+                              }
+                            ],
+                            "InheritedType": 4
                           }
                         ],
                         "saved_objtypeKey": "CONTAINER"
@@ -2960,12 +3025,6 @@
                         "flags": 1048576,
                         "strtype": "OBJECT/Flags",
                         "InheritedType": 1
-                      },
-                      {
-                        "nid": 100,
-                        "strtype": "OBJECT/Hidden",
-                        "strval": "True",
-                        "InheritedType": 2
                       },
                       {
                         "nid": 110,
@@ -3195,33 +3254,7 @@
                           },
                           {
                             "part": "lv.PART.KNOB",
-                            "childs": [
-                              {
-                                "nid": 10000,
-                                "strtype": "_style/StyleState",
-                                "strval": "DEFAULT",
-                                "childs": [
-                                  {
-                                    "nid": 10710,
-                                    "strtype": "_style/Border_Color",
-                                    "intarray": [
-                                      0,
-                                      0,
-                                      0,
-                                      50
-                                    ],
-                                    "InheritedType": 7
-                                  },
-                                  {
-                                    "nid": 10720,
-                                    "strtype": "_style/Border width",
-                                    "integer": 2,
-                                    "InheritedType": 6
-                                  }
-                                ],
-                                "InheritedType": 1
-                              }
-                            ],
+                            "childs": [],
                             "nid": 1020,
                             "strtype": "COLORWHEEL/Style_knob",
                             "strval": "lv.PART.KNOB, Rectangle, Pad",
@@ -3457,8 +3490,8 @@
                                 "intarray": [
                                   20,
                                   20,
-                                  30,
-                                  30
+                                  20,
+                                  20
                                 ],
                                 "InheritedType": 7
                               },
@@ -10148,7 +10181,7 @@
     "uiExportFolderPath": "/Users/paulbarrass/git/esp32/cane-v3/src/ui",
     "projectExportFolderPath": "/Users/paulbarrass/git/esp32/cane-v3/src/ui",
     "custom_variable_prefix": "uic",
-    "backup_cnt": 77,
+    "backup_cnt": 80,
     "autosave_cnt": 0,
     "group_color_cnt": 0,
     "lvgl_version": "8.3.11",
@@ -10166,7 +10199,7 @@
     "naming": "Name",
     "naming_force_lowercase": false,
     "naming_add_subcomponent": false,
-    "nidcnt": 1000476,
+    "nidcnt": 1000486,
     "BitDepth": 16,
     "Name": "Cane-V3-UI"
   }

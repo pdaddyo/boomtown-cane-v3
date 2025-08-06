@@ -15,6 +15,7 @@ void onButtonPrevClicked(lv_event_t * e);
 void onButtonNextPatternClicked(lv_event_t * e);
 void onAlwaysSwipeChecked(lv_event_t * e);
 void onAlwaysSwipeUnchecked(lv_event_t * e);
+void onSelectAllImages(lv_event_t * e);
 void onColourWheelChanged(lv_event_t * e);
 void onFireSparkingChanged(lv_event_t * e);
 void onFireCoolingChanged(lv_event_t * e);

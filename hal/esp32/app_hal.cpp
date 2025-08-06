@@ -356,6 +356,39 @@ void setup_virtual_leds_ui_screen()
   lv_disp_set_default(display_lcd);
 }
 
+bool allImagesSelected()
+{
+  // check if all selected
+  for (int i = 0; i < lv_obj_get_child_cnt(ui_ContainerImages); i++)
+  {
+    lv_obj_t *button = lv_obj_get_child(ui_ContainerImages, i);
+    if (!lv_obj_has_state(button, LV_STATE_CHECKED))
+    {
+      return false;
+    }
+  }
+  return true;
+}
+
+void onSelectAllImages(lv_event_t *e)
+{
+  bool allSelected = allImagesSelected();
+
+  // if we get here, all images are selected so deselect all
+  for (int i = 0; i < lv_obj_get_child_cnt(ui_ContainerImages); i++)
+  {
+    lv_obj_t *button = lv_obj_get_child(ui_ContainerImages, i);
+    if (allSelected)
+    {
+      lv_obj_clear_state(button, LV_STATE_CHECKED);
+    }
+    else
+    {
+      lv_obj_add_state(button, LV_STATE_CHECKED);
+    }
+  }
+}
+
 void ui_event_ImageButton(lv_event_t *e)
 {
   lv_event_code_t event_code = lv_event_get_code(e);
@@ -364,6 +397,11 @@ void ui_event_ImageButton(lv_event_t *e)
   if (event_code == LV_EVENT_CLICKED)
   {
     setFirstSelectedImageIndex();
+  }
+
+  if (event_code == LV_EVENT_LONG_PRESSED)
+  {
+    onSelectAllImages(e);
   }
 }
 
