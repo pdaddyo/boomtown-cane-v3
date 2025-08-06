@@ -35,6 +35,10 @@ extern lv_obj_t *ui_ButtonImageExample;
 extern lv_obj_t *ui_ImageExample;
 extern lv_obj_t *ui_ButtonImageExample1;
 extern lv_obj_t *ui_ImageExample1;
+extern lv_obj_t *ui_ButtonImageExample2;
+extern lv_obj_t *ui_ImageExample2;
+extern lv_obj_t *ui_ButtonImageExample3;
+extern lv_obj_t *ui_ImageExample3;
 extern void ui_event_ContainerSettingsColour( lv_event_t * e);
 extern lv_obj_t *ui_ContainerSettingsColour;
 extern void ui_event_ColorWheel( lv_event_t * e);
@@ -46,7 +50,7 @@ extern lv_obj_t *ui_ContainerSparking;
 extern lv_obj_t *ui_Label4;
 extern void ui_event_SliderFireSparking( lv_event_t * e);
 extern lv_obj_t *ui_SliderFireSparking;
-extern lv_obj_t *ui_ContainerSparking1;
+extern lv_obj_t *ui_ContainerCooling;
 extern lv_obj_t *ui_Label3;
 extern void ui_event_SliderFireCooling( lv_event_t * e);
 extern lv_obj_t *ui_SliderFireCooling;
@@ -71,10 +75,15 @@ extern lv_obj_t *ui_ContainerHueChange;
 extern lv_obj_t *ui_Label6;
 extern void ui_event_SliderHueDelay( lv_event_t * e);
 extern lv_obj_t *ui_SliderHueDelay;
+extern lv_obj_t *ui_TabPageLogs;
 extern lv_obj_t *ui_ContainerStats;
+extern lv_obj_t *ui_LabelTitle;
 extern lv_obj_t *ui_LabelTemp;
+extern lv_obj_t *ui_LabelGyro;
 extern lv_obj_t *ui_LabelFPS;
 extern lv_obj_t *ui_LabelMemory;
+extern lv_obj_t *ui_LabelError;
+extern lv_obj_t *ui_LabelLogs;
 // CUSTOM VARIABLES
 
 #ifdef __cplusplus

@@ -40,6 +40,7 @@
 #include "app_hal.h"
 #include "images.h"
 #include "patterns.h"
+#include "USB.h"
 
 #include <lvgl.h>
 #include "ui/ui.h"
@@ -50,15 +51,15 @@
 #include "FS.h"
 #include "FFat.h"
 
-#ifdef ENABLE_APP_QMI8658C
 #include "Qmi8658c.h"                // Include the library for QMI8658C sensor
 #define QMI_ADDRESS 0x6B             // Define QMI8658C I2C address
 #define QMI8658C_I2C_FREQUENCY 40000 // Define I2C frequency as 80kHz (in Hz)
-#endif
 
 #define FLASH FFat
 #define F_NAME "FATFS"
-#define buf_size 10
+#define buf_size 50
+
+#define SYS_EN 35
 
 static const uint32_t screenWidth = WIDTH;
 static const uint32_t screenHeight = HEIGHT;
@@ -69,8 +70,9 @@ static lv_color_t buf[2][screenWidth * buf_size];
 #define SCREEN_TOUCH_TIMEOUT 10000
 #define SCREEN_TOUCH_TIMEOUT_FADE_MS 620
 
-static uint8_t lcd_brightness = 100;
+static uint8_t lcd_brightness = 75;
 static unsigned long time_of_last_touch = 0;
+bool ui_ready = false;
 
 class LGFX : public lgfx::LGFX_Device
 {
@@ -172,9 +174,8 @@ public:
 LGFX tft;
 Preferences prefs;
 
-#ifdef ENABLE_APP_QMI8658C
 // Declare an instance of Qmi8658c
-Qmi8658c qmi8658c(QMI_ADDRESS, QMI8658C_I2C_FREQUENCY);
+Qmi8658c *qmi8658c;
 
 /* QMI8658C configuration */
 qmi8658_cfg_t qmi8658_cfg = {
@@ -182,12 +183,11 @@ qmi8658_cfg_t qmi8658_cfg = {
     .acc_scale = acc_scale_2g,              // Set the accelerometer scale to ±2g
     .acc_odr = acc_odr_3,                   // Set the accelerometer output data rate (ODR)
     .gyro_scale = gyro_scale_2048dps,       // Set the gyroscope scale to ±2048 dps
-    .gyro_odr = gyro_odr_1000,              // Set the gyroscope output data rate (ODR) to 8000Hz
+    .gyro_odr = gyro_odr_250,               // Set the gyroscope output data rate (ODR) to 8000Hz
 };
 
 qmi8658_result_t qmi8658_result;
 qmi_data_t sensor_data; // Declare a variable to store sensor data
-#endif
 
 void hal_setup(void);
 void hal_loop(void);
@@ -289,9 +289,53 @@ void onBrightnessChange(lv_event_t *e)
   prefs.putInt("brightness", v);
 }
 
+#include <deque>
+#include <string>
+
+constexpr size_t LOG_HISTORY_SIZE = 10;
+std::deque<String> logHistory;
+
+void addLogLine(const String &line)
+{
+  if (logHistory.size() >= LOG_HISTORY_SIZE)
+  {
+    logHistory.pop_back();
+  }
+  logHistory.push_front(line);
+}
+
+const std::deque<String> &getLogHistory()
+{
+  return logHistory;
+}
+
+char *logHistoryLines()
+{
+  static String result;
+  result = "";
+  for (const auto &line : logHistory)
+  {
+    result += line + "\n";
+  }
+  return (char *)result.c_str();
+}
+
+// Update logCallback to store last 20 log lines
 void logCallback(Level level, unsigned long time, String message)
 {
   Serial.print(message);
+
+  addLogLine(message.c_str());
+
+  if (ui_ready)
+  {
+    lv_label_set_text_fmt(ui_LabelLogs, logHistoryLines());
+
+    if (level == Level::ERROR)
+    {
+      lv_label_set_text_fmt(ui_LabelError, "Error: %s", message.c_str());
+    }
+  }
 }
 
 void my_log_cb(const char *buf)
@@ -450,6 +494,19 @@ void loadImageButtons()
 void hal_setup()
 {
 
+  esp_pm_config_t pm_config = {
+      .max_freq_mhz = 240,
+      .min_freq_mhz = 240,
+      .light_sleep_enable = false,
+  };
+  esp_pm_configure(&pm_config);
+
+  // System enable - CRITICAL!
+  pinMode(SYS_EN, OUTPUT);
+  digitalWrite(SYS_EN, HIGH);
+  // wait for power to stabilise
+  delay(500);
+
   Serial.begin(115200); /* prepare for possible serial debug */
 
   Timber.setLogCallback(logCallback);
@@ -470,7 +527,7 @@ void hal_setup()
   lv_init();
 
   Timber.i("Setup virtual leds display");
-  setup_virtual_leds_display();
+  // setup_virtual_leds_display();
 
   Timber.i("Setup lcd display");
   lv_disp_draw_buf_init(&draw_buf, buf[0], buf[1], screenWidth * buf_size);
@@ -494,12 +551,17 @@ void hal_setup()
   indev_drv.read_cb = my_touchpad_read;
   lv_indev_drv_register(&indev_drv);
 
-  lv_log_register_print_cb(my_log_cb);
+  //  lv_log_register_print_cb(my_log_cb);
 
-  _lv_fs_init();
+  // delay(500); // Delay for sensor initialization
+  qmi8658c = new Qmi8658c(QMI_ADDRESS, QMI8658C_I2C_FREQUENCY);
+  qmi8658_result = qmi8658c->open(&qmi8658_cfg);
+  // Delay for sensor initialization
+
+  //_lv_fs_init();
 
   ui_init();
-  setup_virtual_leds_ui_screen();
+  // setup_virtual_leds_ui_screen();
 
   Timber.i(heapUsage());
 
@@ -519,46 +581,35 @@ void hal_setup()
 
   lv_disp_load_scr(ui_Screen1);
 
-  // load saved preferences
-  int tm = prefs.getInt("timeout", 0);
+  ui_ready = true;
 
-  screenBrightness(prefs.getInt("lcd_brightness", 100));
-
-#ifdef ENABLE_APP_QMI8658C
-
-  qmi8658_result = qmi8658c.open(&qmi8658_cfg);
-  delay(100); // Delay for sensor initialization
-
-  Timber.i("IMU State: %s", qmi8658c.resultToString(qmi8658_result));
-
-#endif
+  Timber.i("IMU State: %s", qmi8658c->resultToString(qmi8658_result));
 
   lv_dropdown_clear_options(ui_DropdownMode);
   for (int i = 0; i < ARRAY_SIZE(gPatternNames); i++)
   {
     lv_dropdown_add_option(ui_DropdownMode, gPatternNames[i], i);
-    Timber.i("Pattern %d: %s", i, gPatternNames[i]);
+    // Timber.i("Pattern %d: %s", i, gPatternNames[i]);
   }
 
   lv_dropdown_clear_options(ui_DropdownFirePalette);
   for (int i = 0; i < ARRAY_SIZE(palette_names); i++)
   {
     lv_dropdown_add_option(ui_DropdownFirePalette, palette_names[i], i);
-    Timber.i("Palette %d: %s", i, palette_names[i]);
+    // Timber.i("Palette %d: %s", i, palette_names[i]);
   }
 
   selected_hsv = lv_colorwheel_get_hsv(ui_ColorWheel);
 
   setModeContainer(0);
   loadImageButtons();
-  //  lv_img_set_src(ui_ImagePreview, &boomtown_bw_72_square);
 
   Timber.i("Setup done");
 }
 
 void update_gyro()
 {
-  qmi8658c.read(&sensor_data);
+  qmi8658c->read(&sensor_data);
 }
 
 qmi_data_t get_sensor_data()
@@ -657,6 +708,7 @@ void leds_loop()
     {
       update_gyro();
       gyro_z = get_gyro_z();
+      lv_label_set_text_fmt(ui_LabelGyro, "Gyro Z: %.2f", gyro_z);
     }
   }
 
@@ -683,7 +735,7 @@ void leds_loop()
   // EVERY_N_SECONDS(5) { nextPattern(); } // change patterns periodically
   EVERY_N_SECONDS(2)
   {
-    Timber.i("LED FPS: %d", FastLED.getFPS());
+    // Timber.i("LED FPS: %d", FastLED.getFPS());
     lv_label_set_text_fmt(ui_LabelTemp, "Temperature: %.2fC", get_temp());
     lv_label_set_text_fmt(ui_LabelFPS, "LED FPS: %d", FastLED.getFPS());
     lv_label_set_text(ui_LabelMemory, heapUsage().c_str());

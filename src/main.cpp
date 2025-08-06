@@ -1,4 +1,7 @@
 
+#undef ARDUINO_USB_MODE
+#define ARDUINO_USB_MODE 0
+
 #include <stdint.h>
 #include <Arduino.h>
 #include <FastLED.h>
