@@ -127,4 +127,8 @@ static const lv_img_dsc_t *image_array[] = {
     &boom,
     &bam,
     &pow_1,
+    &wave_1,
+    &wave_2,
+    &wave_3,
+    &dickbutt,
 };
