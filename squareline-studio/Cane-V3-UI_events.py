@@ -70,3 +70,15 @@ def onSelectAll(event_struct):
 def onDropdownFirePaletteChanged(event_struct):
     return
 
+
+def onRandomAfterSwipeChecked(event_struct):
+    return
+
+
+def onRandomAfterSwipeUnchecked(event_struct):
+    return
+
+
+def onSwipesPerImageChanged(event_struct):
+    return
+

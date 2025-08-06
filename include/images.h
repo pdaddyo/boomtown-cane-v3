@@ -36,6 +36,10 @@
 #include "images/bam.c"
 #include "images/pow.c"
 #include "images/lqbtq.c"
+#include "images/wave_1.c"
+#include "images/wave_2.c"
+#include "images/wave_3.c"
+#include "images/dickbutt.c"
 
 // Map of image names to their descriptor objects
 
@@ -78,6 +82,11 @@ extern const lv_img_dsc_t dance_man_2;
 extern const lv_img_dsc_t boom;
 extern const lv_img_dsc_t bam;
 extern const lv_img_dsc_t pow_1;
+
+extern const lv_img_dsc_t wave_1;
+extern const lv_img_dsc_t wave_2;
+extern const lv_img_dsc_t wave_3;
+extern const lv_img_dsc_t dickbutt;
 
 static const lv_img_dsc_t *image_array[] = {
     &boomtown_new,

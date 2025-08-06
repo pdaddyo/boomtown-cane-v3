@@ -491,6 +491,14 @@ void loadImageButtons()
   }
 }
 
+void setLEDBrightness(uint8_t brightness)
+{
+  led_brightness = brightness;
+  led_brightness = lv_slider_get_value(ui_SliderLEDBrightness);
+
+  lv_label_set_text_fmt(ui_LabelLEDBrightness, "LED Brightness: %d", led_brightness);
+}
+
 void hal_setup()
 {
 
@@ -603,6 +611,7 @@ void hal_setup()
 
   setModeContainer(0);
   loadImageButtons();
+  setLEDBrightness(led_brightness);
 
   Timber.i("Setup done");
 }
@@ -773,12 +782,12 @@ void onDropdownPatternChanged(lv_event_t *e)
 
 void onLEDBrightnessChanged(lv_event_t *e)
 {
-  led_brightness = lv_slider_get_value(ui_SliderLEDBrightness);
+  setLEDBrightness(led_brightness);
 }
 
 void onFlashModeStart(lv_event_t *e)
 {
-  led_brightness = 0;
+  setLEDBrightness(0);
 }
 
 void onFlashModeEnd(lv_event_t *e)
@@ -825,4 +834,30 @@ void onColourWheelChanged(lv_event_t *e)
 void onDropdownFirePaletteChanged(lv_event_t *e)
 {
   selected_palette_index = lv_dropdown_get_selected(ui_DropdownFirePalette);
+}
+
+void onSwipesPerImageChanged(lv_event_t *e)
+{
+  swipes_per_image = lv_slider_get_value(ui_SliderSwipesPerImage);
+  lv_label_set_text_fmt(ui_LabelSwipesPerImage, "%d %s Per Image", swipes_per_image, swipes_per_image == 1 ? "Swipe" : "Swipes");
+}
+
+void onRandomAfterSwipeChecked(lv_event_t *e)
+{
+  randomise_after_swipe = true;
+}
+
+void onRandomAfterSwipeUnchecked(lv_event_t *e)
+{
+  randomise_after_swipe = false;
+}
+
+void onRandomColourAfterSwipeChecked(lv_event_t *e)
+{
+  randomise_colour_after_swipe = true;
+}
+
+void onRandomColourAfterSwipeUnchecked(lv_event_t *e)
+{
+  randomise_colour_after_swipe = false;
 }

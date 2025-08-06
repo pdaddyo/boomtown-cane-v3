@@ -41,6 +41,10 @@ unsigned int image_index_to_swipe = 0;
 unsigned int swipe_count_on_current_image = 0;
 lv_img_dsc_t *image_to_swipe = NULL;
 
+uint8_t swipes_per_image = 2;
+bool randomise_after_swipe = false;
+bool randomise_colour_after_swipe = false;
+
 #define ARRAY_SIZE(A) (sizeof(A) / sizeof((A)[0]))
 
 uint8_t selected_palette_index = 0;
@@ -578,10 +582,36 @@ void setFirstSelectedImageIndex()
    swipe_count_on_current_image = 0;
 }
 
+uint8_t getRandomSelectedImageIndex()
+{
+   int selected_image_indices[lv_obj_get_child_cnt(ui_ContainerImages)];
+   int selectedCount = 0;
+   for (int i = 0; i < lv_obj_get_child_cnt(ui_ContainerImages); i++)
+   {
+      lv_obj_t *button = lv_obj_get_child(ui_ContainerImages, i);
+      if (lv_obj_has_state(button, LV_STATE_CHECKED) && i != image_index_to_swipe)
+      {
+         selected_image_indices[selectedCount++] = i;
+      }
+   }
+   if (selectedCount == 0)
+   {
+      return 0;
+   }
+
+   return selected_image_indices[random(0, selectedCount - 1)];
+}
+
 void setNextSelectedImageIndex()
 {
    swipe_count_on_current_image = 0;
    auto current_image_index = image_index_to_swipe;
+
+   if (randomise_after_swipe)
+   {
+      image_index_to_swipe = getRandomSelectedImageIndex();
+      return;
+   }
 
    for (int i = 0; i < lv_obj_get_child_cnt(ui_ContainerImages); i++)
    {
@@ -610,8 +640,13 @@ void swipeEnd()
    unsigned long current_time = millis();
    last_swipe_duration = current_time - swipe_trigger_time;
    Timber.i("Swipe end, duration: %dms", last_swipe_duration);
+   if (randomise_colour_after_swipe)
+   {
+      selected_hsv = {(unsigned short)random(0, 360), 100, 100};
+      lv_colorwheel_set_hsv(ui_ColorWheel, selected_hsv);
+   }
    swipe_count_on_current_image++;
-   if (swipe_count_on_current_image > 1)
+   if (swipe_count_on_current_image >= swipes_per_image)
    {
       setNextSelectedImageIndex();
    }
