@@ -10,7 +10,7 @@
 #define NUM_LEDS_EACH_SIDE 72
 #define NUM_LEDS (NUM_LEDS_EACH_SIDE * 2)
 
-#define INITIAL_BRIGHTNESS 20
+#define INITIAL_BRIGHTNESS 30
 #define COLOR_ORDER BGR
 
 bool leds_setup_completed = false;

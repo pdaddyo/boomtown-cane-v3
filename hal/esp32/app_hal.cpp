@@ -38,6 +38,7 @@
 #include <Hardware.h>
 #include <Arduino.h>
 #include "app_hal.h"
+#include "images.h"
 #include "patterns.h"
 
 #include <lvgl.h>
@@ -45,7 +46,6 @@
 
 #include "main.h"
 #include "splash.h"
-#include "images.h"
 
 #include "FS.h"
 #include "FFat.h"
@@ -60,29 +60,15 @@
 #define F_NAME "FATFS"
 #define buf_size 10
 
-lv_disp_t *display_virtual_leds;
-
-// virtual leds display
-#define DISPLAY_VIRTUAL_LEDS_WIDTH 200
-#define DISPLAY_VIRTUAL_LEDS_HEIGHT 72
-#define DISPLAY_VIRTUAL_LEDS_PIXEL_COUNT (DISPLAY_VIRTUAL_LEDS_WIDTH * DISPLAY_VIRTUAL_LEDS_HEIGHT)
-#define DISPLAY_VIRTUAL_LEDS_BYTE_PER_PIXEL 2 /* be 2 for RGB565 */
-
-static lv_color_t virtual_leds_buf[DISPLAY_VIRTUAL_LEDS_PIXEL_COUNT];
-static lv_disp_draw_buf_t virtual_leds_draw_buf;
-static lv_disp_drv_t virtual_leds_drv;
-static lv_obj_t *virtual_leds_ui_screen;
-
-// lcd display
-lv_disp_t *display_lcd;
 static const uint32_t screenWidth = WIDTH;
 static const uint32_t screenHeight = HEIGHT;
 
 static lv_disp_draw_buf_t draw_buf;
 static lv_color_t buf[2][screenWidth * buf_size];
 
-#define SCREEN_TOUCH_TIMEOUT 5000
-#define SCREEN_TOUCH_TIMEOUT_FADE_MS 420
+#define SCREEN_TOUCH_TIMEOUT 10000
+#define SCREEN_TOUCH_TIMEOUT_FADE_MS 620
+
 static uint8_t lcd_brightness = 100;
 static unsigned long time_of_last_touch = 0;
 
@@ -200,7 +186,7 @@ qmi8658_cfg_t qmi8658_cfg = {
 };
 
 qmi8658_result_t qmi8658_result;
-qmi_data_t data; // Declare a variable to store sensor data
+qmi_data_t sensor_data; // Declare a variable to store sensor data
 #endif
 
 void hal_setup(void);
@@ -283,8 +269,8 @@ String heapUsage()
   uint32_t total = ESP.getHeapSize();
   uint32_t free = ESP.getFreeHeap();
   usage += "Total: " + String(total);
-  usage += "\tFree: " + String(free);
-  usage += "\t" + String(((total - free) * 1.0) / total * 100, 2) + "%";
+  usage += ", Free: " + String(free);
+  usage += "\nUsage: " + String(((total - free) * 1.0) / total * 100, 2) + "%";
   return usage;
 }
 
@@ -329,7 +315,7 @@ void loadSplash()
     }
   }
 
-  delay(500);
+  delay(700);
 }
 
 void setup_virtual_leds_display()
@@ -358,16 +344,75 @@ void setup_virtual_leds_ui_screen()
   lv_obj_set_style_bg_color(virtual_leds_ui_screen, lv_color_hex(0x000000), LV_PART_MAIN);
 
   // add an image to the screen
-  lv_obj_t *image = lv_img_create(virtual_leds_ui_screen);
-  lv_obj_set_size(image, DISPLAY_VIRTUAL_LEDS_WIDTH, DISPLAY_VIRTUAL_LEDS_HEIGHT);
-  lv_obj_set_pos(image, 0, 0);
-  lv_obj_set_style_bg_color(image, lv_color_hex(0x000000), LV_PART_MAIN);
-  lv_obj_set_style_bg_opa(image, LV_OPA_COVER, LV_PART_MAIN);
-  lv_img_set_src(image, &boomtown_bw_72_square);
+  image_on_virtual_screen = lv_img_create(virtual_leds_ui_screen);
+  lv_obj_set_size(image_on_virtual_screen, DISPLAY_VIRTUAL_LEDS_WIDTH, DISPLAY_VIRTUAL_LEDS_HEIGHT);
+  lv_obj_set_pos(image_on_virtual_screen, 0, 0);
+  lv_obj_set_style_bg_color(image_on_virtual_screen, lv_color_hex(0x000000), LV_PART_MAIN);
+  lv_obj_set_style_bg_opa(image_on_virtual_screen, LV_OPA_COVER, LV_PART_MAIN);
+  lv_img_set_src(image_on_virtual_screen, &boomtown_bw_72_square);
 
   lv_scr_load_anim(virtual_leds_ui_screen, LV_SCR_LOAD_ANIM_NONE, 0, 0, true);
 
   lv_disp_set_default(display_lcd);
+}
+
+void ui_event_ImageButton(lv_event_t *e)
+{
+  lv_event_code_t event_code = lv_event_get_code(e);
+  lv_obj_t *target = lv_event_get_target(e);
+
+  if (event_code == LV_EVENT_CLICKED)
+  {
+    setFirstSelectedImageIndex();
+  }
+}
+
+lv_obj_t *createImageButton(const lv_img_dsc_t *image_src)
+{
+  lv_obj_t *imageButton = lv_btn_create(ui_ContainerImages);
+  lv_obj_set_width(imageButton, image_src->header.w + 8);
+  lv_obj_set_height(imageButton, image_src->header.h + 8);
+  lv_obj_set_align(imageButton, LV_ALIGN_CENTER);
+  lv_obj_set_flex_flow(imageButton, LV_FLEX_FLOW_ROW);
+  lv_obj_set_flex_align(imageButton, LV_FLEX_ALIGN_START, LV_FLEX_ALIGN_START, LV_FLEX_ALIGN_START);
+  lv_obj_add_flag(imageButton, LV_OBJ_FLAG_CHECKABLE | LV_OBJ_FLAG_SCROLL_ON_FOCUS); /// Flags
+  lv_obj_clear_flag(imageButton, LV_OBJ_FLAG_SCROLLABLE);                            /// Flags
+  lv_obj_set_style_bg_color(imageButton, lv_color_hex(0x5BCEFA), LV_PART_MAIN | LV_STATE_DEFAULT);
+  lv_obj_set_style_bg_opa(imageButton, 50, LV_PART_MAIN | LV_STATE_DEFAULT);
+  lv_obj_set_style_pad_left(imageButton, 4, LV_PART_MAIN | LV_STATE_DEFAULT);
+  lv_obj_set_style_pad_right(imageButton, 4, LV_PART_MAIN | LV_STATE_DEFAULT);
+  lv_obj_set_style_pad_top(imageButton, 4, LV_PART_MAIN | LV_STATE_DEFAULT);
+  lv_obj_set_style_pad_bottom(imageButton, 4, LV_PART_MAIN | LV_STATE_DEFAULT);
+  lv_obj_set_style_bg_color(imageButton, lv_color_hex(0xFF69B4), LV_PART_MAIN | LV_STATE_CHECKED);
+  lv_obj_set_style_bg_opa(imageButton, 255, LV_PART_MAIN | LV_STATE_CHECKED);
+  lv_obj_add_event_cb(imageButton, ui_event_ImageButton, LV_EVENT_ALL, NULL);
+
+  lv_obj_t *image = lv_img_create(imageButton);
+  lv_obj_set_width(image, image_src->header.w);
+  lv_obj_set_height(image, image_src->header.h);
+  lv_obj_set_align(image, LV_ALIGN_CENTER);
+  lv_obj_set_style_radius(image, 8, LV_PART_MAIN | LV_STATE_DEFAULT);
+  lv_obj_set_style_clip_corner(image, true, LV_PART_MAIN | LV_STATE_DEFAULT);
+  lv_img_set_src(image, image_src);
+
+  return imageButton;
+}
+
+void loadImageButtons()
+{
+  lv_obj_clean(ui_ContainerImages);
+
+  bool first = true;
+  // loop throw image_array
+  for (auto index = 0; index < ARRAY_SIZE(image_array); index++)
+  {
+    lv_obj_t *button = createImageButton(image_array[index]);
+    if (first)
+    {
+      lv_obj_add_state(button, LV_STATE_CHECKED);
+      first = false;
+    }
+  }
 }
 
 void hal_setup()
@@ -463,6 +508,10 @@ void hal_setup()
     Timber.i("Pattern %d: %s", i, gPatternNames[i]);
   }
 
+  selected_hsv = lv_colorwheel_get_hsv(ui_ColorWheel);
+
+  setModeContainer(0);
+  loadImageButtons();
   //  lv_img_set_src(ui_ImagePreview, &boomtown_bw_72_square);
 
   Timber.i("Setup done");
@@ -470,22 +519,47 @@ void hal_setup()
 
 void update_gyro()
 {
-  qmi8658c.read(&data);
+  qmi8658c.read(&sensor_data);
+}
+
+qmi_data_t get_sensor_data()
+{
+  return sensor_data;
 }
 
 float get_gyro_x()
 {
-  return data.gyro_xyz.x;
+  return sensor_data.gyro_xyz.x;
 }
 
 float get_gyro_y()
 {
-  return data.gyro_xyz.y;
+  return sensor_data.gyro_xyz.y;
 }
 
 float get_gyro_z()
 {
-  return data.gyro_xyz.z;
+  return sensor_data.gyro_xyz.z;
+}
+
+float get_acc_x()
+{
+  return sensor_data.acc_xyz.x;
+}
+
+float get_acc_y()
+{
+  return sensor_data.acc_xyz.y;
+}
+
+float get_acc_z()
+{
+  return sensor_data.acc_xyz.z;
+}
+
+float get_temp()
+{
+  return sensor_data.temperature;
 }
 
 void hal_loop()
@@ -493,7 +567,7 @@ void hal_loop()
 
   lv_timer_handler(); /* let the GUI do its work */
 
-  FastLED.setBrightness(lv_slider_get_value(ui_SliderLEDBrightness));
+  FastLED.setBrightness(led_brightness);
 
   unsigned long current_time = millis();
   unsigned long timeout_time = time_of_last_touch + SCREEN_TOUCH_TIMEOUT;
@@ -518,8 +592,8 @@ void hal_loop()
     screenBrightness(lcd_brightness);
   }
 
-  lv_disp_t *display = lv_disp_get_default();
-  lv_obj_t *actScr = lv_disp_get_scr_act(display);
+  // lv_disp_t *display = lv_disp_get_default();
+  // lv_obj_t *actScr = lv_disp_get_scr_act(display);
 }
 
 void leds_setup()
@@ -535,38 +609,46 @@ void leds_setup()
 
 void leds_loop()
 {
+  // do some periodic updates
+  EVERY_N_MILLISECONDS_DYNAMIC(hue_delay) { gHue--; } // slowly cycle the "base color" through the rainbow
+
+  EVERY_N_MILLISECONDS(75)
+  {
+    if (gCurrentPatternNumber == 0 || always_swipe)
+    {
+      update_gyro();
+      gyro_z = get_gyro_z();
+    }
+  }
+
+  // are we in mask mode?
+  if (gCurrentPatternNumber > 0 && always_swipe)
+  {
+    detectSwipe();
+    return;
+  }
 
   // Call the current pattern function once, updating the 'leds' array
   gPatterns[gCurrentPatternNumber]();
-  mirror_leds();
+
+  if (gCurrentPatternNumber > 0)
+  {
+    addGlitter(glitter);
+    mirror_leds();
+  }
 
   // send the 'leds' array out to the actual LED strip
   FastLED.show();
   FastLED.countFPS();
 
-#ifndef USE_SDL
-  EVERY_N_MILLISECONDS(100)
-  {
-    // read_gyro();
-    update_gyro();
-    float z = get_gyro_z();
-
-    if (fabs(z) > 200)
-    {
-      Timber.i("Gyro:  z:%f", z);
-    }
-  }
-#endif
-
-  // do some periodic updates
-  EVERY_N_MILLISECONDS(1) { gHue--; } // slowly cycle the "base color" through the rainbow
   // EVERY_N_SECONDS(5) { nextPattern(); } // change patterns periodically
-  EVERY_N_SECONDS(1) { Timber.i("LED FPS: %d", FastLED.getFPS()); }
-}
-
-void onLEDBrightnessChanged(lv_event_t *e)
-{
-  Serial.printf("onLEDBrightnessChanged %d\n", lv_slider_get_value(ui_SliderLEDBrightness));
+  EVERY_N_SECONDS(2)
+  {
+    Timber.i("LED FPS: %d", FastLED.getFPS());
+    lv_label_set_text_fmt(ui_LabelTemp, "Temperature: %.2fC", get_temp());
+    lv_label_set_text_fmt(ui_LabelFPS, "LED FPS: %d", FastLED.getFPS());
+    lv_label_set_text(ui_LabelMemory, heapUsage().c_str());
+  }
 }
 
 void onButtonNextPatternClicked(lv_event_t *e)
@@ -596,4 +678,55 @@ void onDropdownPatternChanged(lv_event_t *e)
   int selectedIndex = lv_dropdown_get_selected(ui_DropdownMode);
   Timber.i("onDropdownPatternChanged %d", selectedIndex);
   setPatternIndex(selectedIndex);
+}
+
+void onLEDBrightnessChanged(lv_event_t *e)
+{
+  led_brightness = lv_slider_get_value(ui_SliderLEDBrightness);
+}
+
+void onFlashModeStart(lv_event_t *e)
+{
+  led_brightness = 0;
+}
+
+void onFlashModeEnd(lv_event_t *e)
+{
+  led_brightness = lv_slider_get_value(ui_SliderLEDBrightness);
+}
+
+void onFlashPressed(lv_event_t *e)
+{
+  led_brightness = lv_slider_get_value(ui_SliderLEDBrightness);
+}
+
+void onFlashReleased(lv_event_t *e)
+{
+  led_brightness = 0;
+}
+
+void onHueDelayChanged(lv_event_t *e)
+{
+  hue_delay = lv_slider_get_value(ui_SliderHueDelay);
+}
+
+void onGlitterChanged(lv_event_t *e)
+{
+  glitter = lv_slider_get_value(ui_SliderGlitter);
+}
+
+void onAlwaysSwipeChecked(lv_event_t *e)
+{
+  always_swipe = true;
+}
+
+void onAlwaysSwipeUnchecked(lv_event_t *e)
+{
+  always_swipe = false;
+}
+
+void onColourWheelChanged(lv_event_t *e)
+{
+  selected_hsv = lv_colorwheel_get_hsv(ui_ColorWheel);
+  //  Timber.i("Colour wheel changed: hue: %d, saturation: %d, value: %d", selected_hsv.h, selected_hsv.s, selected_hsv.v);
 }

@@ -1,7 +1,28 @@
 #include "ui/ui.h"
 
+// led and lcd displays
+lv_disp_t *display_lcd;
+lv_disp_t *display_virtual_leds;
+
+// virtual leds display (NOW UNUSED)
+#define DISPLAY_VIRTUAL_LEDS_WIDTH 200
+#define DISPLAY_VIRTUAL_LEDS_HEIGHT 72
+#define DISPLAY_VIRTUAL_LEDS_PIXEL_COUNT (DISPLAY_VIRTUAL_LEDS_WIDTH * DISPLAY_VIRTUAL_LEDS_HEIGHT)
+#define DISPLAY_VIRTUAL_LEDS_BYTE_PER_PIXEL 2 /* be 2 for RGB565 */
+
+static lv_color_t virtual_leds_buf[DISPLAY_VIRTUAL_LEDS_PIXEL_COUNT];
+static lv_disp_draw_buf_t virtual_leds_draw_buf;
+static lv_disp_drv_t virtual_leds_drv;
+static lv_obj_t *virtual_leds_ui_screen;
+
 uint8_t gCurrentPatternNumber = 0; // Index number of which pattern is current
 uint8_t gHue = 0;                  // rotating "base color" used by many of the patterns
+uint8_t glitter = 0;
+float gyro_z = 0;
+uint8_t led_brightness = INITIAL_BRIGHTNESS;
+uint8_t hue_delay = 1;
+bool always_swipe = false;
+lv_color_hsv_t selected_hsv = {0, 255, 255};
 
 #define ARRAY_SIZE(A) (sizeof(A) / sizeof((A)[0]))
 
@@ -46,7 +67,7 @@ void bpm()
 {
    // colored stripes pulsing at a defined Beats-Per-Minute (BPM)
    uint8_t BeatsPerMinute = 120;
-   CRGBPalette16 palette = PartyColors_p;
+   CRGBPalette16 palette = RainbowStripeColors_p;
    uint8_t beat = beatsin8(BeatsPerMinute, 60, 255);
    for (int i = NUM_LEDS_EACH_SIDE - 1; i >= 0; i--)
    { // 9948
@@ -329,10 +350,25 @@ void prideFlag()
    EVERY_N_MILLISECONDS(wobbleSpeed) { sOffset += 4; }
 }
 
+void solidColour()
+{
+   for (int i = 0; i < NUM_LEDS; i++)
+   {
+      // Convert selected_hsv (h: 0-360, s: 0-100, v: 0-100) to FastLED HSV (h: 0-255, s: 0-255, v: 0-255)
+      uint8_t h = (selected_hsv.h * 255) / 360;
+      uint8_t s = (selected_hsv.s * 255) / 100;
+      uint8_t v = (selected_hsv.v * 255) / 100;
+      leds[i].setHSV(h, s, v);
+      // leds[i].setHSV(selected_hsv.h, selected_hsv.s, selected_hsv.v);
+   }
+}
+
 // List of patterns to cycle through.  Each is defined as a separate function below.
 typedef void (*SimplePatternList[])();
+void imageSwipe();
 
 SimplePatternList gPatterns = {
+    imageSwipe,
     Fire2012,
     bpm,
     juggle,
@@ -342,10 +378,11 @@ SimplePatternList gPatterns = {
     sinelon,
     confetti,
     transgenderFlag,
-    prideFlag};
-
+    prideFlag,
+    solidColour};
 // pattern names
 const char *gPatternNames[] = {
+    "Image",
     "Fire",
     "BPM",
     "Juggle",
@@ -356,11 +393,292 @@ const char *gPatternNames[] = {
     "Confetti",
     "Trans Flag",
     "Pride Flag",
+    "Colour",
 };
+
+lv_obj_t *image_on_virtual_screen = NULL;
+float gyro_trigger_threshold = 100;
+float gyro_swipe_end_threshold = 30;
+
+// -1 = right to left
+// 0 = not triggered
+// 1 = left to right
+bool swipe_in_progress = false;
+int8_t gyro_last_direction = 0;
+float gyro_last_trigger_force = 0;
+unsigned long swipe_trigger_time = 0;
+unsigned long last_swipe_duration = 0;
+
+unsigned int image_index_to_swipe = 0;
+lv_img_dsc_t *image_to_swipe = NULL;
+
+struct RGBA
+{
+   union
+   {
+      struct
+      {
+         union
+         {
+            uint8_t r;   ///< Red channel value
+            uint8_t red; ///< @copydoc r
+         };
+         union
+         {
+            uint8_t g;     ///< Green channel value
+            uint8_t green; ///< @copydoc g
+         };
+         union
+         {
+            uint8_t b;    ///< Blue channel value
+            uint8_t blue; ///< @copydoc b
+         };
+         union
+         {
+            uint8_t a;     ///< Alpha channel value
+            uint8_t alpha; ///< @copydoc a
+         };
+      };
+      /// Access the red, green, and blue data as an array.
+      /// Where:
+      /// * `raw[0]` is the red value
+      /// * `raw[1]` is the green value
+      /// * `raw[2]` is the blue value
+      /// * `raw[3]` is the alpha value
+      uint8_t raw[4];
+   };
+};
+
+void setFirstSelectedImageIndex()
+{
+   image_index_to_swipe = -1;
+   for (int i = 0; i < lv_obj_get_child_cnt(ui_ContainerImages); i++)
+   {
+      lv_obj_t *button = lv_obj_get_child(ui_ContainerImages, i);
+      if (lv_obj_has_state(button, LV_STATE_CHECKED))
+      {
+         if (image_index_to_swipe == -1)
+         {
+            image_index_to_swipe = i;
+         }
+      }
+   }
+
+   if (image_index_to_swipe == -1)
+   {
+      image_index_to_swipe = 0;
+   }
+}
+
+void setNextSelectedImageIndex()
+{
+   auto current_image_index = image_index_to_swipe;
+
+   for (int i = 0; i < lv_obj_get_child_cnt(ui_ContainerImages); i++)
+   {
+      lv_obj_t *button = lv_obj_get_child(ui_ContainerImages, i);
+      if (lv_obj_has_state(button, LV_STATE_CHECKED))
+      {
+         if (i > current_image_index)
+         {
+            image_index_to_swipe = i;
+            return;
+         }
+      }
+   }
+
+   // if we get here we didn't find a next image, so wrap around
+   setFirstSelectedImageIndex();
+}
+
+void swipeEnd()
+{
+   if (!swipe_in_progress)
+   {
+      return;
+   }
+   swipe_in_progress = false;
+   unsigned long current_time = millis();
+   last_swipe_duration = current_time - swipe_trigger_time;
+   Timber.i("Swipe end, duration: %dms", last_swipe_duration);
+   setNextSelectedImageIndex();
+}
+
+void swipeImage(uint8_t image_index, float duration)
+{
+   Timber.i("Swipe image: %d", image_index);
+   auto start_end_delay = 0;
+
+   auto img_dsc = image_array[image_index];
+   auto palette_then_image_data = img_dsc->data;
+
+   // pallete is at start of data
+   auto pallete = (RGBA *)palette_then_image_data;
+   auto img_data = palette_then_image_data + 1024;
+   uint32_t width = img_dsc->header.w;
+   uint32_t height = img_dsc->header.h;
+
+   delay(start_end_delay);
+
+   auto time_of_last_gyro_update = millis();
+   bool mask_pattern_mode = always_swipe && gCurrentPatternNumber > 0;
+
+   for (uint16_t swipe_x = 0; swipe_x <= width; swipe_x++)
+   {
+
+      if (mask_pattern_mode)
+      {
+         // run the pattern, and mirror the leds
+         gPatterns[gCurrentPatternNumber]();
+         mirror_leds();
+      }
+
+      auto x = swipe_x;
+      if (gyro_last_direction < 0)
+      {
+         x = width - swipe_x;
+      }
+      for (uint16_t y = 0; y < DISPLAY_VIRTUAL_LEDS_HEIGHT; y++)
+      {
+         // data structure is indexed pallete (4 bytes per pixel for 256 colors)
+         // then pixel data is a list of indexes
+
+         // calculate the x position from the swipe progress
+
+         // BACK OF CANE
+         auto index = img_data[y * width + x];
+         RGBA color = pallete[index];
+         if (mask_pattern_mode)
+         {
+            if (color.r == 0 && color.g == 0 && color.b == 0)
+            {
+               leds[NUM_LEDS_EACH_SIDE + y] = CRGB(0, 0, 0);
+            }
+         }
+         else
+         {
+            leds[NUM_LEDS_EACH_SIDE + y] = CRGB(color.b, color.g, color.r);
+         }
+
+         // FRONT OF CANE
+         auto front_x = width - x;
+         index = img_data[y * width + front_x];
+         color = pallete[index];
+         if (mask_pattern_mode)
+         {
+            if (color.r == 0 && color.g == 0 && color.b == 0)
+            {
+               leds[NUM_LEDS_EACH_SIDE - y - 1] = CRGB(0, 0, 0);
+            }
+         }
+         else
+         {
+            leds[NUM_LEDS_EACH_SIDE - y - 1] = CRGB(color.b, color.g, color.r);
+         }
+      }
+      FastLED.show();
+      // auto delay_time = (unsigned long)(duration / 2.0F / (float)width);
+      // Timber.i("delay_time: %d", delay_time);
+      if (width < 100)
+      {
+         delay(1);
+      }
+
+      // // update gyro every 100ms during swipe
+      // auto current_time = millis();
+      // auto time_since_last_gyro_update = current_time - time_of_last_gyro_update;
+      // if (time_since_last_gyro_update > 100)
+      // {
+      //    time_of_last_gyro_update = current_time;
+      //    update_gyro();
+      // }
+   }
+
+   delay(start_end_delay);
+
+   swipeEnd();
+}
+
+float linear_map(float x, float x1, float y1, float x2, float y2)
+{
+   return ((y2 - y1) / (x2 - x1)) * (x - x1) + y1;
+}
+
+float map_force_to_estimated_duration(float input)
+{
+   // Linear mapping from (100,420) and (200,300)
+   // Slope: m = (300-420)/(200-100) = -120/100 = -1.2
+   // Intercept: b = 420 - (-1.2 * 100) = 540
+
+   return linear_map(input, 100, 420, 200, 300);
+}
+
+void swipeStart(float gyroForce)
+{
+   if (swipe_in_progress)
+   {
+      swipeEnd();
+   }
+   gyro_last_direction = gyroForce > 0 ? 1 : -1;
+   gyro_last_trigger_force = fabs(gyro_z);
+   Timber.i("%s force: %.2f, est duration: %.0fms", gyro_last_direction > 0 ? "LTR -->" : "RTL <--", gyro_last_trigger_force, map_force_to_estimated_duration(gyro_last_trigger_force));
+   unsigned long current_time = millis();
+   swipe_trigger_time = current_time;
+   swipe_in_progress = true;
+   uint16_t duration = map_force_to_estimated_duration(gyro_last_trigger_force);
+   swipeImage(image_index_to_swipe, duration);
+}
+
+void detectSwipe()
+{
+   // Timber.i("gyro_z: %f", gyro_z);
+   if (gyro_last_direction <= 0)
+   {
+      if (gyro_z > gyro_trigger_threshold)
+      {
+         swipeStart(gyro_z);
+      }
+   }
+
+   if (gyro_last_direction >= 0)
+   {
+      if (gyro_z < -gyro_trigger_threshold)
+      {
+         swipeStart(gyro_z);
+      }
+   }
+
+   if (fabs(gyro_z) < gyro_swipe_end_threshold && gyro_last_direction != 0)
+   {
+      swipeEnd();
+   }
+
+   // clear LEDs
+   for (int i = 0; i < NUM_LEDS; i++)
+   {
+      leds[i] = CRGB(0, 0, 0);
+   }
+   FastLED.show();
+}
+
+void imageSwipe()
+{
+   detectSwipe();
+}
 
 void setModeContainer(uint8_t index)
 {
+   if (index == 0)
+   {
+      lv_obj_add_flag(ui_ContainerAlwaysSwipe, LV_OBJ_FLAG_HIDDEN);
+   }
+   else
+   {
+      lv_obj_clear_flag(ui_ContainerAlwaysSwipe, LV_OBJ_FLAG_HIDDEN);
+   }
+
    lv_obj_t *gModeContainers[] = {
+       ui_ContainerSettingsImage,
        ui_ContainerSettingsFire,
        NULL, // bpm
        NULL, // juggle
@@ -371,7 +689,7 @@ void setModeContainer(uint8_t index)
        NULL, // confetti
        NULL, // transgenderFlag
        NULL, // prideFlag
-   };
+       ui_ContainerSettingsColour};
 
    if (index >= ARRAY_SIZE(gModeContainers))
    {
@@ -388,7 +706,7 @@ void setModeContainer(uint8_t index)
       {
          if (i != index)
          {
-            Timber.i("Hiding mode container %d", i);
+            // Timber.i("Hiding mode container %d", i);
             lv_obj_add_flag(modeContainer, LV_OBJ_FLAG_HIDDEN);
          }
          else

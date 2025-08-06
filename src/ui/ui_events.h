@@ -13,9 +13,18 @@ extern "C" {
 void onDropdownPatternChanged(lv_event_t * e);
 void onButtonPrevClicked(lv_event_t * e);
 void onButtonNextPatternClicked(lv_event_t * e);
+void onAlwaysSwipeChecked(lv_event_t * e);
+void onAlwaysSwipeUnchecked(lv_event_t * e);
+void onColourWheelChanged(lv_event_t * e);
 void onFireSparkingChanged(lv_event_t * e);
 void onFireCoolingChanged(lv_event_t * e);
+void onFlashModeStart(lv_event_t * e);
+void onFlashModeEnd(lv_event_t * e);
+void onFlashPressed(lv_event_t * e);
+void onFlashReleased(lv_event_t * e);
 void onLEDBrightnessChanged(lv_event_t * e);
+void onGlitterChanged(lv_event_t * e);
+void onHueDelayChanged(lv_event_t * e);
 
 #ifdef __cplusplus
 } /*extern "C"*/
